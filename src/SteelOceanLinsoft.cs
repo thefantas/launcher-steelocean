@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Steel Ocean - Linsoft")]
 [assembly: AssemblyProduct("Steel Ocean - Linsoft")]
-[assembly: AssemblyVersion("1.1.1.0")]
+[assembly: AssemblyVersion("1.1.2.0")]
 
 // The interface follows the Windows language: Spanish on a Spanish system, English on any other.
 static class Tr
@@ -48,7 +48,7 @@ class Manifest
 
 static class Patch
 {
-    public const string LauncherVersion = "1.1.1";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
+    public const string LauncherVersion = "1.1.2";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
     // build.py replaces this with keys/patch_public.xml.
     const string PublicKey = "__PUBLIC_KEY__";
     public const string GameFolder = "Steel Ocean Wolves of Deep Sea";
@@ -276,15 +276,11 @@ static class Patch
 
     public static void CleanUpOldLauncher()
     {
-        // ".viejo" is what launcher 1.1.0 left behind.
-        foreach (string suffix in new[] { ".old", ".viejo" })
+        string old = Application.ExecutablePath + ".old";
+        for (int i = 0; i < 25 && File.Exists(old); i++)
         {
-            string old = Application.ExecutablePath + suffix;
-            for (int i = 0; i < 25 && File.Exists(old); i++)
-            {
-                TryDelete(old);
-                if (File.Exists(old)) Thread.Sleep(200);
-            }
+            TryDelete(old);
+            if (File.Exists(old)) Thread.Sleep(200);
         }
     }
 
@@ -401,7 +397,6 @@ class MainWindow : Form
             Location = new Point(-5000, -5000);
             ShowInTaskbar = false;
         }
-        MigrateOldData();
         installed = ReadData("version.txt");
         timer.Tick += delegate { OnTick(); };
         Shown += delegate
@@ -411,18 +406,6 @@ class MainWindow : Form
             new Thread(CheckServer) { IsBackground = true }.Start();
             if (justUpdated) new Thread(Patch.CleanUpOldLauncher) { IsBackground = true }.Start();
         };
-    }
-
-    // Launcher 1.1.0 used other names for what it remembers.
-    void MigrateOldData()
-    {
-        foreach (var pair in new[] { new[] { "juego.txt", "game.txt" }, new[] { "aceptado.txt", "accepted.txt" } })
-        {
-            string before = Path.Combine(dataFolder, pair[0]), after = Path.Combine(dataFolder, pair[1]);
-            try { if (File.Exists(before) && !File.Exists(after)) File.Move(before, after); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
-        }
     }
 
     // --- A window without a frame: it still moves, minimizes and has a shadow ---
@@ -1397,7 +1380,7 @@ static class Program
             Application.Run(new MainWindow(1f, false));
             return 0;
         }
-        bool updated = Has(a, "--updated") || Has(a, "--actualizado");  // --actualizado is what launcher 1.1.0 passes
+        bool updated = Has(a, "--updated");
         bool created;
         using (var single = new Mutex(true, @"Local\SteelOceanLinsoftLauncher", out created))
         {
