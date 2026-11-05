@@ -1,0 +1,275 @@
+{
+ "version": "1.0.1",
+ "date": "2026-11-05",
+ "web": "https://steelocean.linsoft.pe",
+ "exe": "Binaries/win32/SeaGame.exe",
+ "arguments": "-seekfreeloading -NOSCREENMESSAGES -Addr=steelocean.linsoft.pe:19000 -EnableReadEncrypted -EnableWriteEncrypted -MaxClientNumber=10 -TServerName=Linsoft",
+ "files": [
+  {
+   "path": "Binaries/win32/SeaGame.exe",
+   "sha256": "eb288a5c125771c3f3104cd4b09195059753347f16a72a3f19d222aadd299efc",
+   "size": 29795320,
+   "gz_size": 10611609
+  },
+  {
+   "path": "Binaries/win32/d3d9.dll",
+   "sha256": "265888c31ca78dffa290c39cb7e50bfb02762590e41927906e46fb32f01497fa",
+   "size": 7856142,
+   "gz_size": 3092516
+  },
+  {
+   "path": "Binaries/win32/innohttp.dll",
+   "sha256": "8880a98dd6e0cd8419424cbed9f95a7ceffcc169ac32933dac3e54fb151be53e",
+   "size": 208144,
+   "gz_size": 95173
+  },
+  {
+   "path": "Binaries/win32/rsa.pub",
+   "sha256": "3808b837f0db0e09fd0b05225e683df5f36d8bd1b58db5f2feca6010f556139b",
+   "size": 251,
+   "gz_size": 229
+  },
+  {
+   "path": "Binaries/win32/steam_api.dll",
+   "sha256": "56a9212ef1842bea592975f1f0914c36d0d4bf26d65582c2c680152b84187cfd",
+   "size": 191172,
+   "gz_size": 89675
+  },
+  {
+   "path": "SeaGame/Config/DefaultEngine.ini",
+   "sha256": "ae6f05f4b8b94e38257bacffead0eedc3949a2afa7e59f3a31f3880482ece086",
+   "size": 2865,
+   "gz_size": 1285
+  },
+  {
+   "path": "SeaGame/Config/DefaultGame.ini",
+   "sha256": "f1e2a7676d67c4ad5b874e16f7cf857d4490ba4d1334a50140c790aa5ee8c1eb",
+   "size": 29224,
+   "gz_size": 7631
+  },
+  {
+   "path": "SeaGame/CookedPC/SeaGame.u",
+   "sha256": "ac8bc81fe18b91d73c64941686bb41cc3286577b2f906bdf04b1a4ebc0be32ed",
+   "size": 36660368,
+   "gz_size": 36127441
+  },
+  {
+   "path": "SeaGame/CookedPC/UI/UICommander.upk",
+   "sha256": "4a7abf5284862c42425e65ce3e23f461e2f46e783b0431a88d842222b125c344",
+   "size": 39434109,
+   "gz_size": 39137017
+  },
+  {
+   "path": "SeaGame/CookedPC/UI/UICommon.upk",
+   "sha256": "9f9b0bd88915308508b7debdd980273b5855e3404536b1fd9520fb61293b82e0",
+   "size": 46834115,
+   "gz_size": 34773512
+  },
+  {
+   "path": "SeaGame/CookedPC/UI/UIFight.upk",
+   "sha256": "2e516246ea12d83c918215425a1fe2195171338cc89d13209a4888ec160363c2",
+   "size": 37449250,
+   "gz_size": 35342888
+  },
+  {
+   "path": "SeaGame/CookedPC/UI/UILobby.upk",
+   "sha256": "841f1b7934ec644847075069026e8bbf27d535ba05cede61cfe54b470278f04a",
+   "size": 34589023,
+   "gz_size": 30734118
+  },
+  {
+   "path": "SeaGame/CookedPC/UI/UILoginMain.upk",
+   "sha256": "ad76315fae9c2288160b5eee2dd49692db692bbd4bf818ba181ace8cd1eb9c71",
+   "size": 8044439,
+   "gz_size": 7929043
+  },
+  {
+   "path": "SeaGame/Localization/INT/SeaGame.int",
+   "sha256": "64fc8fcbd1811fb69c71f7f73a115729a140060a50e7e2426b297c610c8bb732",
+   "size": 424566,
+   "gz_size": 69407
+  },
+  {
+   "path": "SeaGame/Localization/INT/XMLTranslator.int",
+   "sha256": "3bd3f11294de76f7d71fc4b43e9f904d02cd38927155321223ff835623e5903c",
+   "size": 1544552,
+   "gz_size": 299377
+  },
+  {
+   "path": "SeaGame/LogicConfig/5V5Desc.xml",
+   "sha256": "a1de810318cca687333ec9a97ffd7544156cd305c62c44cc5bb86968107ac820",
+   "size": 6460,
+   "gz_size": 857
+  },
+  {
+   "path": "SeaGame/LogicConfig/AdvertisementDesc.xml",
+   "sha256": "a92f65ee044f35e1e69411a10e218100419bc563b1a3c55676b14f20780a9b80",
+   "size": 1448,
+   "gz_size": 368
+  },
+  {
+   "path": "SeaGame/LogicConfig/BossBattleDesc.xml",
+   "sha256": "5e5305e7ad8edb0411db4bd75b457f679f65c095443738fff980196b0d31a373",
+   "size": 12496,
+   "gz_size": 1501
+  },
+  {
+   "path": "SeaGame/LogicConfig/BuffPrototypeDesc.xml",
+   "sha256": "0b1b4b15288f8492329f046611963ab881ee260d10534d014c40c53770cbb4d3",
+   "size": 328042,
+   "gz_size": 13428
+  },
+  {
+   "path": "SeaGame/LogicConfig/CommanderDesc.xml",
+   "sha256": "76b48907fa3f299c8872fe9f9489e194364cabdfa9ccf56c862d70cc920b61a0",
+   "size": 931754,
+   "gz_size": 24383
+  },
+  {
+   "path": "SeaGame/LogicConfig/GrowingProjectDesc.xml",
+   "sha256": "b15984190b5299f087971c7613594d00cb0a7d92ce3d5ed683ed6571f2ee76d9",
+   "size": 8060,
+   "gz_size": 1587
+  },
+  {
+   "path": "SeaGame/LogicConfig/HistoryBattleDesc.xml",
+   "sha256": "2d2d187441b46e95aec4e359446625f5b409018db568ec036d1f3c5c8a539756",
+   "size": 22136,
+   "gz_size": 2037
+  },
+  {
+   "path": "SeaGame/LogicConfig/MarketDesc.xml",
+   "sha256": "015ef7927d7dbda04c895c6ece34e5e749db4b960f7c2a44874ea9eec95217bc",
+   "size": 8075870,
+   "gz_size": 193220
+  },
+  {
+   "path": "SeaGame/LogicConfig/MessageDesc.xml",
+   "sha256": "e378902ba8c90b9e12d9ef7601775403c1f8ca7889f74f15088199a1991202c0",
+   "size": 228196,
+   "gz_size": 17174
+  },
+  {
+   "path": "SeaGame/LogicConfig/MiscDesc.xml",
+   "sha256": "dc8a0b6c432843f609763a2f95e790e667a5e91e6b50954a16c50912e6a508be",
+   "size": 78646,
+   "gz_size": 12697
+  },
+  {
+   "path": "SeaGame/LogicConfig/MiscServerDesc.xml",
+   "sha256": "06bd6ceedbe92f5b70990ed182e654561194bd4007c555618b65ce1967e0d744",
+   "size": 28244,
+   "gz_size": 6012
+  },
+  {
+   "path": "SeaGame/LogicConfig/NavySetting.xml",
+   "sha256": "0e64e10e1a8cc696b184838da299dd3e86cbdc759a3ec04435ba4b0fe6437237",
+   "size": 22856,
+   "gz_size": 3553
+  },
+  {
+   "path": "SeaGame/LogicConfig/PartUpgradeDesc.xml",
+   "sha256": "e52fef8cdb20e8d25bb2e092ee4de5b14f126f3403aae761f71cb78820ee2fbb",
+   "size": 792560,
+   "gz_size": 25043
+  },
+  {
+   "path": "SeaGame/LogicConfig/PassiveSkillPrototypeDesc.xml",
+   "sha256": "837e7a81534241eb2de50b6977f1b8d5d8a3df17581e2ede9d0fa14cba07f34b",
+   "size": 37254,
+   "gz_size": 3633
+  },
+  {
+   "path": "SeaGame/LogicConfig/Platform360PriviDesc.xml",
+   "sha256": "6441d3e5b37245e8869aeef341554d8dbb6a4dbd888910fcd3a3d9b9fb416922",
+   "size": 4012,
+   "gz_size": 489
+  },
+  {
+   "path": "SeaGame/LogicConfig/PropertySkillPrototypeDesc.xml",
+   "sha256": "49ee968ac73d917c04c4e793f66994a39aca6880408b0b250d69810128c86f81",
+   "size": 241710,
+   "gz_size": 9327
+  },
+  {
+   "path": "SeaGame/LogicConfig/PvEBattleDesc.xml",
+   "sha256": "5206b9e75fc02d636ce889bd8ff21adf330bb7d50c255654b18fec8fa65fb47c",
+   "size": 41934,
+   "gz_size": 1095
+  },
+  {
+   "path": "SeaGame/LogicConfig/QuestDesc.xml",
+   "sha256": "e24e0861d571ea598274ef8c56cec4aab4e75c4c410d82f64288cd935648e472",
+   "size": 516246,
+   "gz_size": 19248
+  },
+  {
+   "path": "SeaGame/LogicConfig/RDRoadMapDesc.xml",
+   "sha256": "432a78a6c4e82e3b3d81cb1e0c31680a68af829126411f496034d595b7697334",
+   "size": 7976,
+   "gz_size": 957
+  },
+  {
+   "path": "SeaGame/LogicConfig/SkillPrototypeDesc.xml",
+   "sha256": "ee5d0e002d17e3b00bcbd9cf6ad09a0560481a4abd95ae640b7bcc5b24a94d77",
+   "size": 164334,
+   "gz_size": 9771
+  },
+  {
+   "path": "SeaGame/LogicConfig/VehicleDesc.xml",
+   "sha256": "8b7567a4bd6439c525a59ef4133dbcbb672c3b0c52c840e5e445455c37b466ed",
+   "size": 1851594,
+   "gz_size": 109739
+  },
+  {
+   "path": "SeaGame/LogicConfig/VehicleUpgradeDesc.xml",
+   "sha256": "e959a4c7627effefd821f7d690a728ebcfe5fc736dda1c15627d08e27ab91ac2",
+   "size": 71516,
+   "gz_size": 3046
+  }
+ ],
+ "delete": [
+  "Binaries/win32/rail_api.dll",
+  "Binaries/win32/PlatFormSDK.dll",
+  "Binaries/win32/LoginUI.dll",
+  "Binaries/win32/steam_appid.txt"
+ ],
+ "folders": [
+  "SeaGame/Replay"
+ ],
+ "history": [
+  {
+   "version": "1.0.1",
+   "date": "2026-11-05",
+   "notes": [
+    "Respawning now restores ammunition, aircraft and consumables.",
+    "The launcher has a Check for updates button, and shows Spanish on a Spanish Windows."
+   ],
+   "notes_es": [
+    "Al reaparecer se reponen la munición, los aviones y los objetos.",
+    "El lanzador tiene un botón Buscar actualizaciones, y sale en español con Windows en español."
+   ]
+  },
+  {
+   "version": "1.0.0",
+   "date": "2026-11-05",
+   "notes": [
+    "First public version of the patch.",
+    "New launcher: it updates itself and shows the patch versions.",
+    "The game connects to the Linsoft server, without Steam or third-party calls.",
+    "Ships really sink now: they go down and list."
+   ],
+   "notes_es": [
+    "Primera versión pública del parche.",
+    "Lanzador nuevo: se actualiza solo y enseña las versiones del parche.",
+    "El juego se conecta al servidor de Linsoft, sin Steam ni avisos a terceros.",
+    "Los barcos se hunden de verdad: bajan y escoran."
+   ]
+  }
+ ],
+ "launcher": {
+  "version": "1.1.1",
+  "sha256": "6fd573fda2a9a087f846d1fd0df485c520fb0d97d13d86a275ffbfaed876f2fb",
+  "size": 89600
+ }
+}
