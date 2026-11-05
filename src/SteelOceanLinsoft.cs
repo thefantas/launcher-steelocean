@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Steel Ocean - Linsoft")]
 [assembly: AssemblyProduct("Steel Ocean - Linsoft")]
-[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyVersion("1.2.1.0")]
 
 // The interface follows the Windows language: Spanish on a Spanish system, English on any other.
 static class Tr
@@ -48,7 +48,7 @@ class Manifest
 
 static class Patch
 {
-    public const string LauncherVersion = "1.2.0";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
+    public const string LauncherVersion = "1.2.1";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
     // build.py replaces this with keys/patch_public.xml.
     const string PublicKey = "__PUBLIC_KEY__";
     public const string GameFolder = "Steel Ocean Wolves of Deep Sea";
@@ -567,10 +567,10 @@ class MainWindow : Form
     float scroll, notesHeight;
     List<NoteLine> noteLines;
     double lastCheck;
-    SideTab sideTab = SideTab.Notes;
+    SideTab sideTab = SideTab.Account;
     AccountView accountView = AccountView.Create;
     AccountResult account;
-    bool accountBusy, capturing, testAccountSent;
+    bool accountBusy, capturing, testAccountSent, restoringSession = true;
     string accountMessage = "";
     bool accountMessageGood;
     TextBox emailBox, userBox, passwordBox, repeatBox;
@@ -601,11 +601,7 @@ class MainWindow : Form
         repeatBox = MakeInput(true);
         Controls.AddRange(new Control[] { emailBox, userBox, passwordBox, repeatBox });
         string savedUser = ReadData("account.txt");
-        if (savedUser == null)
-        {
-            sideTab = SideTab.Account;
-        }
-        else
+        if (savedUser != null)
         {
             accountView = AccountView.SignIn;
             userBox.Text = savedUser;
@@ -1149,8 +1145,9 @@ class MainWindow : Form
         using (var b = new SolidBrush(Theme.Bar)) g.FillRectangle(b, 0, 470, LogicalWidth, LogicalHeight - 470);
         using (var l = new Pen(Theme.Line)) g.DrawLine(l, 0, 470, LogicalWidth, 470);
         const float x = 32, width = 650;
-        Write(g, title, GetFont(Theme.BoldFont, 19), Theme.Text, x, 484);
-        Paragraph(g, detail, GetFont(Theme.Font, 13), Theme.Muted, new RectangleF(x, 511, width - 190, 18), StringTrimming.EllipsisPath);
+        bool mustSignIn = phase == Phase.Ready && account == null && !restoringSession;
+        Write(g, mustSignIn ? Tr.S("Sign in to play", "Inicia sesión para jugar") : title, GetFont(Theme.BoldFont, 19), Theme.Text, x, 484);
+        Paragraph(g, mustSignIn ? Tr.S("Your game is up to date. Create your account or sign in here.", "Tu juego está al día. Crea tu cuenta o inicia sesión aquí.") : detail, GetFont(Theme.Font, 13), Theme.Muted, new RectangleF(x, 511, width - 190, 18), StringTrimming.EllipsisPath);
         if (figures.Length > 0)
         {
             var f = GetFont(Theme.BoldFont, 12.5f);
@@ -1202,13 +1199,13 @@ class MainWindow : Form
         return x + a + 26;
     }
 
-    bool CanPressMain() { return !busy && dialog == null && (phase == Phase.Ready || phase == Phase.Failed || phase == Phase.NoGame || phase == Phase.NeedsInstall); }
+    bool CanPressMain() { return !busy && !restoringSession && dialog == null && (phase == Phase.Ready || phase == Phase.Failed || phase == Phase.NoGame || phase == Phase.NeedsInstall); }
 
     string MainButtonText()
     {
         switch (phase)
         {
-            case Phase.Ready: return Tr.S("PLAY", "JUGAR");
+            case Phase.Ready: return account != null ? Tr.S("PLAY", "JUGAR") : Tr.S("SIGN IN", "INICIAR SESIÓN");
             case Phase.Failed: return Tr.S("RETRY", "REINTENTAR");
             case Phase.NoGame: return Tr.S("CHOOSE FOLDER", "ELEGIR CARPETA");
             case Phase.NeedsInstall: return Tr.S("INSTALL", "INSTALAR");
@@ -1306,7 +1303,16 @@ class MainWindow : Form
         noteLines = null;
         switch (state)
         {
-            case "ready": SetState(Phase.Ready, Tr.S("Ready to play", "Listo para jugar"), Tr.S("Your game is up to date.", "Tu juego está al día."), 1, ""); break;
+            case "signedout":
+                restoringSession = false;
+                sideTab = SideTab.Account;
+                accountView = AccountView.Create;
+                SetState(Phase.Ready, Tr.S("Ready to play", "Listo para jugar"), Tr.S("Your game is up to date.", "Tu juego está al día."), 1, "");
+                break;
+            case "ready":
+                restoringSession = false;
+                account = new AccountResult { Ok = true, User = "Captain_01" };
+                SetState(Phase.Ready, Tr.S("Ready to play", "Listo para jugar"), Tr.S("Your game is up to date.", "Tu juego está al día."), 1, ""); break;
             case "updating": SetState(Phase.Installing, Tr.S("Updating to patch ", "Actualizando al parche ") + m.Version, "SeaGame/CookedPC/SeaGame.u", 0.42, "79 / 189 MB · 8.4 MB/s · 00:13"); break;
             case "first":
                 SetState(Phase.Checking, Tr.S("Checking game files", "Comprobando los ficheros del juego"), "", -2, "");
@@ -1317,6 +1323,7 @@ class MainWindow : Form
             case "account-error":
                 sideTab = SideTab.Account;
                 accountView = AccountView.Create;
+                restoringSession = false;
                 emailBox.Text = "captain@example.com";
                 userBox.Text = "Captain_01";
                 passwordBox.Text = repeatBox.Text = "password1";
@@ -1326,6 +1333,7 @@ class MainWindow : Form
             case "account-signed":
                 sideTab = SideTab.Account;
                 accountView = AccountView.Signed;
+                restoringSession = false;
                 account = new AccountResult { Ok = true, User = "Captain_01", HasWallet = true, Silver = 1250000, Gold = 3200, Ships = 12 };
                 SetState(Phase.Ready, Tr.S("Ready to play", "Listo para jugar"), Tr.S("Your game is up to date.", "Tu juego está al día."), 1, "");
                 break;
@@ -1367,7 +1375,7 @@ class MainWindow : Form
 
     void WatchForTest(double now)
     {
-        string line = phase + " | " + title;
+        string line = phase + " | " + title + " | " + MainButtonText();
         if (line != lastTrace)
         {
             lastTrace = line;
@@ -1428,8 +1436,14 @@ class MainWindow : Form
         try { saved = Account.RestoreSession(dataFolder); }
         catch (WebException) { }
         catch (IOException) { }
-        if (saved == null) return;
-        OnUi(delegate { ShowSignedIn(saved); });
+        OnUi(delegate
+        {
+            restoringSession = false;
+            if (saved == null) return;
+            ShowSignedIn(saved);
+            sideTab = SideTab.Notes;
+            PlaceInputs();
+        });
     }
 
     void ShowSignedIn(AccountResult result)
@@ -1666,9 +1680,10 @@ class MainWindow : Form
         string name = Tr.S("Updating to patch ", "Actualizando al parche ") + m.Version;
         try
         {
-            if (!TestMode.Active && Process.GetProcessesByName("SeaGame").Length > 0)
+            if (!TestMode.Active && GameIsRunning())
             {
                 Report(Phase.Failed, Tr.S("Close the game", "Cierra el juego"), Tr.S("There is an update, and it cannot be installed while the game is open.", "Hay una actualización, y no se puede instalar con el juego abierto."), -1);
+                OnUi(OfferToCloseHiddenGame);
                 return;
             }
             var watch = Stopwatch.StartNew();
@@ -1710,6 +1725,42 @@ class MainWindow : Form
         {
             Report(Phase.Failed, Tr.S("Could not apply the patch", "No se pudo aplicar el parche"), e.Message, -1);
         }
+    }
+
+    static bool GameIsRunning() { return Process.GetProcessesByName("SeaGame").Length > 0; }
+
+    // A game that has no window can stay alive after closing, and the player cannot see what is blocking the launcher.
+    static List<Process> HiddenGames()
+    {
+        var hidden = new List<Process>();
+        foreach (var p in Process.GetProcessesByName("SeaGame"))
+            if (p.MainWindowHandle == IntPtr.Zero) hidden.Add(p);
+        return hidden;
+    }
+
+    void OfferToCloseHiddenGame()
+    {
+        var hidden = HiddenGames();
+        if (hidden.Count == 0 || dialog != null) return;
+        dialog = new Dialog
+        {
+            Title = Tr.S("The game is still running", "El juego sigue en marcha"),
+            Body = Tr.S("The game is still running in the background, without a window. Close it to continue?", "El juego sigue en segundo plano, sin ventana. ¿Lo cierras para continuar?"),
+            Yes = Tr.S("Close the game", "Cerrar el juego"),
+            No = Tr.S("Cancel", "Cancelar"),
+            Answer = delegate(bool yes)
+            {
+                if (!yes) return;
+                foreach (var p in hidden)
+                {
+                    try { p.Kill(); p.WaitForExit(5000); }
+                    catch (InvalidOperationException) { }
+                    catch (System.ComponentModel.Win32Exception) { }
+                }
+                Start(Check);
+            }
+        };
+        Invalidate();
     }
 
     void MarkReady()
@@ -1770,12 +1821,28 @@ class MainWindow : Form
             case Phase.NeedsInstall: AskToInstall(game, pendingFiles.Count, pendingMb, pendingFiles); return;
             case Phase.Failed: Start(Check); return;
         }
-        if (Process.GetProcessesByName("SeaGame").Length > 0)
+        if (account == null)  // without a session the button says Sign in
         {
+            sideTab = SideTab.Account;
+            PlaceInputs();
+            var fields = FormFields();
+            if (fields.Length > 0) ActiveControl = fields[0].Text.Length > 0 && fields.Length > 1 ? fields[1] : fields[0];
+            Invalidate();
+            return;
+        }
+        if (GameIsRunning())
+        {
+            OfferToCloseHiddenGame();
+            if (dialog != null) return;
             dialog = new Dialog { Title = Tr.S("The game is already open", "El juego ya está abierto"), Body = Tr.S("Close it before opening it again.", "Ciérralo antes de abrirlo otra vez."), Yes = Tr.S("OK", "Entendido") };
             Invalidate();
             return;
         }
+        OpenGame();
+    }
+
+    void OpenGame()
+    {
         busy = true;
         Report(Phase.Ready, Tr.S("Starting the game", "Abriendo el juego"), account != null ? account.User : "", -2);
         var who = account;
@@ -1812,7 +1879,7 @@ static class Program
     // What does not open a window, for automated tests (never with the real game):
     //   --version; --test-apply --dir PATH --url URL: applies the patch; --test-self-update --url URL: replaces itself if there is a newer launcher;
     //   --test-window --url URL --dir PATH --data PATH --trace FILE [--accept|--decline] [--final FILE.png]: the real window, off-screen;
-    //   --capture FILE.png --state ready|updating|first|notinstalled|offline|account|account-error|account-signed --manifest FILE [--installed V] [--players N] [--scale X]: paints without showing anything on screen;
+    //   --capture FILE.png --state ready|signedout|updating|first|notinstalled|offline|account|account-error|account-signed --manifest FILE [--installed V] [--players N] [--scale X]: paints without showing anything on screen;
     //   --language es|en: instead of the Windows language; --web URL: another server; --register "EMAIL|USER|PASSWORD" or --sign-in "USER|PASSWORD": in --test-window;
     //   --test-remember FILE --user NAME [--token T]: writes the username and the token in that game config file.
     [STAThread]
