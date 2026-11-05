@@ -1,5 +1,5 @@
 {
- "version": "1.0.1",
+ "version": "1.0.2",
  "date": "2026-11-05",
  "web": "https://steelocean.linsoft.pe",
  "exe": "Binaries/win32/SeaGame.exe",
@@ -49,9 +49,9 @@
   },
   {
    "path": "SeaGame/CookedPC/SeaGame.u",
-   "sha256": "ac8bc81fe18b91d73c64941686bb41cc3286577b2f906bdf04b1a4ebc0be32ed",
-   "size": 36660368,
-   "gz_size": 36127441
+   "sha256": "b80c4ce9c8a78f3d4731025e21df5017fff2bf271922bf78c91b34613879dc8e",
+   "size": 36748760,
+   "gz_size": 36152567
   },
   {
    "path": "SeaGame/CookedPC/UI/UICommander.upk",
@@ -239,6 +239,20 @@
  ],
  "history": [
   {
+   "version": "1.0.2",
+   "date": "2026-11-05",
+   "notes": [
+    "The launcher lets you create your account, sign in and enter the game directly, without typing your password.",
+    "In training rooms, !bot adds bots evenly to both sides, up to 5 vs 5 counting everyone in the room. If it is full, it tells you why.",
+    "Use !bot N left or !bot N right to choose the side."
+   ],
+   "notes_es": [
+    "El lanzador te permite crear tu cuenta, iniciar sesión y entrar directamente en el juego, sin escribir tu contraseña.",
+    "En las salas de entrenamiento, !bot añade bots por igual a los dos lados, hasta 5 contra 5 contando a todos los de la sala. Si está llena, te dice por qué.",
+    "Con !bot N izquierda o !bot N derecha eliges el lado."
+   ]
+  },
+  {
    "version": "1.0.1",
    "date": "2026-11-05",
    "notes": [
@@ -268,8 +282,8 @@
   }
  ],
  "launcher": {
-  "version": "1.1.2",
-  "sha256": "3d810e3bcabe9631ee57b8128157418907985525411a3f83ec9d0b8ff9e026ba",
-  "size": 89088
+  "version": "1.2.0",
+  "sha256": "2428460843e5be3c09f942dc3e4be270877769877c75b0bc59f77ef2f0d6100c",
+  "size": 107008
  }
 }

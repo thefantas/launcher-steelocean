@@ -21,7 +21,7 @@ OUTPUT = ROOT / "bin" / "SteelOceanLinsoft.exe"
 ICON = SRC / "icon.ico"
 SOURCE = SRC / "SteelOceanLinsoft.cs"
 KEY = ROOT / "keys" / "patch_public.xml"
-REFERENCES = ("System.Web.Extensions.dll", "System.Windows.Forms.dll", "System.Drawing.dll", "Microsoft.CSharp.dll", "System.Core.dll")
+REFERENCES = ("System.Web.Extensions.dll", "System.Windows.Forms.dll", "System.Drawing.dll", "Microsoft.CSharp.dll", "System.Core.dll", "System.Security.dll")
 
 
 def version() -> str:
