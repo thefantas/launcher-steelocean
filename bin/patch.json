@@ -268,8 +268,8 @@
   }
  ],
  "launcher": {
-  "version": "1.1.1",
-  "sha256": "6fd573fda2a9a087f846d1fd0df485c520fb0d97d13d86a275ffbfaed876f2fb",
-  "size": 89600
+  "version": "1.1.2",
+  "sha256": "3d810e3bcabe9631ee57b8128157418907985525411a3f83ec9d0b8ff9e026ba",
+  "size": 89088
  }
 }
