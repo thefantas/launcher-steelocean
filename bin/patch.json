@@ -1,5 +1,5 @@
 {
- "version": "1.0.4",
+ "version": "1.0.5",
  "date": "2026-11-05",
  "exe": "Binaries/win32/SeaGame.exe",
  "arguments": "-seekfreeloading -NOSCREENMESSAGES -Addr=steelocean.linsoft.pe:19000 -EnableReadEncrypted -EnableWriteEncrypted -MaxClientNumber=10 -TServerName=Linsoft",
@@ -237,6 +237,18 @@
   "SeaGame/Replay"
  ],
  "history": [
+  {
+   "version": "1.0.5",
+   "date": "2026-11-05",
+   "notes": [
+    "Ships now collide with islands where they really are, on every map.",
+    "Shells and line of sight now use the real height of the terrain."
+   ],
+   "notes_es": [
+    "Los barcos ahora chocan con las islas donde están de verdad, en todos los mapas.",
+    "Los proyectiles y la línea de vista ahora usan la altura real del terreno."
+   ]
+  },
   {
    "version": "1.0.4",
    "date": "2026-11-05",
