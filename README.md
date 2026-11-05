@@ -6,6 +6,14 @@ Launcher for the private Steel Ocean server. This is an unofficial project. You 
 
 It finds your installation, applies the signed patch, keeps itself and the patch up to date, shows the patch versions and their notes, and starts the game. It shows English, or Spanish on a Spanish Windows.
 
+## Account and gold
+
+Everything is in the launcher: create your account, sign in, change your password and recharge gold there. The payment opens in PayPal, and the gold appears in the launcher as soon as it is done.
+
+### Forgot your password?
+
+Ask the server administrator to reset it. This private server does not send e-mails.
+
 ## First run
 
 Windows may show a SmartScreen warning, because the launcher is not code-signed. To run it, choose **More info**, then **Run anyway**. You can compare the file with the SHA-256 published in each release.

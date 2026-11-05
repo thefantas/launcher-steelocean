@@ -1,7 +1,6 @@
 {
- "version": "1.0.2",
+ "version": "1.0.3",
  "date": "2026-11-05",
- "web": "https://steelocean.linsoft.pe",
  "exe": "Binaries/win32/SeaGame.exe",
  "arguments": "-seekfreeloading -NOSCREENMESSAGES -Addr=steelocean.linsoft.pe:19000 -EnableReadEncrypted -EnableWriteEncrypted -MaxClientNumber=10 -TServerName=Linsoft",
  "files": [
@@ -43,9 +42,9 @@
   },
   {
    "path": "SeaGame/Config/DefaultGame.ini",
-   "sha256": "f1e2a7676d67c4ad5b874e16f7cf857d4490ba4d1334a50140c790aa5ee8c1eb",
-   "size": 29224,
-   "gz_size": 7631
+   "sha256": "a2118d935f1b965668607725c935c398e89f7007a3e4526d40cc165ce8605106",
+   "size": 29292,
+   "gz_size": 7654
   },
   {
    "path": "SeaGame/CookedPC/SeaGame.u",
@@ -151,15 +150,15 @@
   },
   {
    "path": "SeaGame/LogicConfig/MiscDesc.xml",
-   "sha256": "dc8a0b6c432843f609763a2f95e790e667a5e91e6b50954a16c50912e6a508be",
-   "size": 78646,
-   "gz_size": 12697
+   "sha256": "57490f411590b552604c89f6ab2747edfbb98a79390f4961e1dd5a680921abd5",
+   "size": 78970,
+   "gz_size": 12718
   },
   {
    "path": "SeaGame/LogicConfig/MiscServerDesc.xml",
-   "sha256": "06bd6ceedbe92f5b70990ed182e654561194bd4007c555618b65ce1967e0d744",
-   "size": 28244,
-   "gz_size": 6012
+   "sha256": "ed1f58c9d18a8fb19139c714c7a03fbe52ce541b033ea788332d188f292d239f",
+   "size": 28316,
+   "gz_size": 6030
   },
   {
    "path": "SeaGame/LogicConfig/NavySetting.xml",
@@ -181,9 +180,9 @@
   },
   {
    "path": "SeaGame/LogicConfig/Platform360PriviDesc.xml",
-   "sha256": "6441d3e5b37245e8869aeef341554d8dbb6a4dbd888910fcd3a3d9b9fb416922",
-   "size": 4012,
-   "gz_size": 489
+   "sha256": "2b9bc97a6da7a6eaf4b1d1d4082850f98509bcd98c4597e9abf3149df5cc8fce",
+   "size": 4048,
+   "gz_size": 508
   },
   {
    "path": "SeaGame/LogicConfig/PropertySkillPrototypeDesc.xml",
@@ -239,6 +238,22 @@
  ],
  "history": [
   {
+   "version": "1.0.3",
+   "date": "2026-11-05",
+   "notes": [
+    "Recharge gold in the launcher: choose the amount, pay in PayPal and the gold appears there.",
+    "Change your password in the launcher.",
+    "Anti-aircraft shells now fly and burst as in the original game.",
+    "The recharge and account buttons in the game now open the launcher page."
+   ],
+   "notes_es": [
+    "Recarga oro en el lanzador: eliges el importe, pagas en PayPal y el oro aparece ahí.",
+    "Cambia tu contraseña en el lanzador.",
+    "Las granadas antiaéreas ahora vuelan y estallan como en el juego original.",
+    "Los botones de recarga y de cuenta del juego ahora abren la página del lanzador."
+   ]
+  },
+  {
    "version": "1.0.2",
    "date": "2026-11-05",
    "notes": [
@@ -282,8 +297,8 @@
   }
  ],
  "launcher": {
-  "version": "1.2.1",
-  "sha256": "4f5176837994ba0078e80d75079bca764535de4c7e2c8a12a0ee100270bbe846",
-  "size": 109056
+  "version": "1.3.1",
+  "sha256": "e31280317c96903755a6d8813f79a5fa692b474a66d191a17655a5f2c409f19c",
+  "size": 123904
  }
 }

@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Steel Ocean - Linsoft")]
 [assembly: AssemblyProduct("Steel Ocean - Linsoft")]
-[assembly: AssemblyVersion("1.2.1.0")]
+[assembly: AssemblyVersion("1.3.1.0")]
 
 // The interface follows the Windows language: Spanish on a Spanish system, English on any other.
 static class Tr
@@ -48,13 +48,13 @@ class Manifest
 
 static class Patch
 {
-    public const string LauncherVersion = "1.2.1";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
+    public const string LauncherVersion = "1.3.1";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
     // build.py replaces this with keys/patch_public.xml.
     const string PublicKey = "__PUBLIC_KEY__";
     public const string GameFolder = "Steel Ocean Wolves of Deep Sea";
     public const string GameExe = @"Binaries\win32\SeaGame.exe";
-    public static string Website = "https://steelocean.linsoft.pe/";
-    public static string BaseUrl = Website + "downloads/";
+    public static string Server = "https://steelocean.linsoft.pe/";
+    public static string BaseUrl = Server + "downloads/";
     const int Attempts = 3;
 
     public static HttpWebRequest Request(string url)
@@ -286,7 +286,7 @@ static class Patch
 
     public static int PlayersOnline()
     {
-        var d = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(Encoding.UTF8.GetString(Fetch(Website + "api/status")));
+        var d = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(Encoding.UTF8.GetString(Fetch(Server + "api/status")));
         return Convert.ToInt32(d["players"]);
     }
 
@@ -318,22 +318,26 @@ static class Patch
     }
 }
 
-class AccountResult { public bool Ok, HasWallet; public string Error, User, Token; public long Silver, Gold, Ships; }
+class AccountResult { public bool Ok, HasWallet; public string Error, User, Token, Order, Url, Status; public long Silver, Gold, Ships, Paid; }
+class RechargeOption { public int Usd; public long Gold, Bonus; }
+class RechargeInfo { public bool Available; public string Reason, Mode; public long Credited; public AccountResult Who; public List<RechargeOption> Options = new List<RechargeOption>(); }
 
-// The player's account, against the same server API as the website. The password is only sent, over HTTPS, and never kept: what stays is the session, which only this Windows user can read.
+// The player's account, against the server API. The password is only sent, over HTTPS, and never kept: what stays is the session, which only this Windows user can read.
 static class Account
 {
     const string SessionFile = "session.dat";
-    static readonly CookieContainer Cookies = new CookieContainer();
+    static CookieContainer Cookies = new CookieContainer();
 
     static string ReadAll(WebResponse r)
     {
         using (var s = new StreamReader(r.GetResponseStream(), Encoding.UTF8)) return s.ReadToEnd();
     }
 
-    static AccountResult Send(string path, Dictionary<string, string> body)
+    static AccountResult Send(string path, Dictionary<string, string> body) { return Parse(SendText(path, body)); }
+
+    static string SendText(string path, Dictionary<string, string> body)
     {
-        var q = Patch.Request(Patch.Website + path);
+        var q = Patch.Request(Patch.Server + path);
         q.CookieContainer = Cookies;
         if (body != null)
         {
@@ -352,7 +356,7 @@ static class Account
             if (e.Response == null) throw;
             using (var r = e.Response) text = ReadAll(r);
         }
-        return Parse(text);
+        return text;
     }
 
     static AccountResult Parse(string text)
@@ -363,6 +367,10 @@ static class Account
             var result = new AccountResult { Ok = d.ContainsKey("ok") && Equals(d["ok"], true) };
             if (d.ContainsKey("error")) result.Error = Translate(Convert.ToString(d["error"]));
             if (d.ContainsKey("token")) result.Token = Convert.ToString(d["token"]);
+            if (d.ContainsKey("order")) result.Order = Convert.ToString(d["order"]);
+            if (d.ContainsKey("url")) result.Url = Convert.ToString(d["url"]);
+            if (d.ContainsKey("status")) result.Status = Convert.ToString(d["status"]);
+            if (d.ContainsKey("gold")) result.Paid = Convert.ToInt64(d["gold"]);
             var user = d.ContainsKey("user") ? d["user"] as Dictionary<string, object> : null;
             if (user != null)
             {
@@ -397,8 +405,16 @@ static class Account
             case "That username or e-mail is already registered.": return Tr.S(e, "Ese usuario o correo ya está registrado.");
             case "That username is already taken in the game.": return Tr.S(e, "Ese usuario ya existe en el juego.");
             case "Too many new accounts from this address. Try again later.": return Tr.S(e, "Demasiadas cuentas nuevas desde esta dirección. Prueba más tarde.");
+            case "Your current password is not correct.": return Tr.S(e, "La contraseña actual no es correcta.");
             case "Wrong username or password.": return Tr.S(e, "Usuario o contraseña incorrectos.");
             case "Too many failed attempts. Try again in a few minutes.": return Tr.S(e, "Demasiados intentos fallidos. Prueba dentro de unos minutos.");
+            case "The game server is not running.": return Tr.S(e, "El servidor del juego no está en marcha.");
+            case "Online payment is not set up on this server yet.": return Tr.S(e, "Este servidor aún no tiene los pagos en línea preparados.");
+            case "Sign in first.": return Tr.S(e, "Inicia sesión primero.");
+            case "This account has no game profile yet.": return Tr.S("This account has no game profile yet: enter the game once and come back.", "Esta cuenta aún no tiene perfil en el juego: entra una vez y vuelve.");
+            case "Choose one of the recharge amounts.": return Tr.S(e, "Elige uno de los importes de recarga.");
+            case "You have too many unfinished payments. Try again in a few minutes.": return Tr.S(e, "Tienes demasiados pagos sin terminar. Prueba dentro de unos minutos.");
+            case "Could not start the payment. Try again later.": return Tr.S(e, "No se ha podido iniciar el pago. Prueba más tarde.");
             default: return e;
         }
     }
@@ -408,15 +424,35 @@ static class Account
         return Send("api/register", new Dictionary<string, string> { { "email", email }, { "username", user }, { "password", password } });
     }
 
+    public static AccountResult ChangePassword(string current, string password)
+    {
+        return Send("api/password", new Dictionary<string, string> { { "current", current }, { "password", password } });
+    }
+
     public static AccountResult SignIn(string user, string password)
     {
         return Send("api/login", new Dictionary<string, string> { { "username", user }, { "password", password } });
     }
 
+    // For .NET, a cookie restored from disk and the one the server sends later are two different cookies, and the older one is no longer valid after changing the password.
+    static void KeepNewestCookies()
+    {
+        var site = new Uri(Patch.Server);
+        var newest = new Dictionary<string, Cookie>();
+        foreach (Cookie c in Cookies.GetCookies(site))
+        {
+            Cookie seen;
+            if (!newest.TryGetValue(c.Name, out seen) || c.TimeStamp >= seen.TimeStamp) newest[c.Name] = c;
+        }
+        Cookies = new CookieContainer();
+        foreach (var c in newest.Values) Cookies.Add(new Cookie(c.Name, c.Value, "/", site.Host) { Secure = site.Scheme == "https" });
+    }
+
     public static void SaveSession(string folder)
     {
+        KeepNewestCookies();
         var lines = new List<string>();
-        foreach (Cookie c in Cookies.GetCookies(new Uri(Patch.Website))) lines.Add(c.Name + "=" + c.Value);
+        foreach (Cookie c in Cookies.GetCookies(new Uri(Patch.Server))) lines.Add(c.Name + "=" + c.Value);
         if (lines.Count == 0) return;
         Directory.CreateDirectory(folder);
         File.WriteAllBytes(Path.Combine(folder, SessionFile), ProtectedData.Protect(Encoding.UTF8.GetBytes(string.Join("\n", lines)), null, DataProtectionScope.CurrentUser));
@@ -429,7 +465,7 @@ static class Account
         if (!File.Exists(path)) return null;
         try
         {
-            var site = new Uri(Patch.Website);
+            var site = new Uri(Patch.Server);
             foreach (string line in Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(path), null, DataProtectionScope.CurrentUser)).Split('\n'))
             {
                 int equals = line.IndexOf('=');
@@ -459,6 +495,28 @@ static class Account
             return result.Ok ? result.Token : null;
         }
         catch (WebException) { return null; }
+    }
+
+    public static RechargeInfo RechargeOptions()
+    {
+        string text = SendText("api/recharge", null);
+        var d = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(text);
+        var info = new RechargeInfo { Available = Equals(d["available"], true), Reason = Translate(Convert.ToString(d["reason"])), Mode = Convert.ToString(d["mode"]), Credited = Convert.ToInt64(d["credited"]), Who = Parse(text) };
+        foreach (Dictionary<string, object> o in (object[])d["options"])
+            info.Options.Add(new RechargeOption { Usd = Convert.ToInt32(o["usd"]), Gold = Convert.ToInt64(o["gold"]), Bonus = Convert.ToInt64(o["bonus"]) });
+        return info;
+    }
+
+    public static AccountResult CreateRecharge(int usd)
+    {
+        return Send("api/recharge", new Dictionary<string, string> { { "usd", usd.ToString(CultureInfo.InvariantCulture) } });
+    }
+
+    public static AccountResult RechargeStatus(string order, bool cancel)
+    {
+        var body = new Dictionary<string, string> { { "order", order } };
+        if (cancel) body["cancel"] = "1";
+        return Send("api/recharge/status", body);
     }
 
     public static string GameConfigFile()
@@ -518,7 +576,8 @@ static class Theme
 // For automated tests only: the real window, with its threads and downloads, but off-screen, without focus, without touching the desktop, and with the game in a temporary folder.
 static class TestMode
 {
-    public static string DataFolder, Game, FinalCapture, Trace, Register, SignIn;
+    public static string DataFolder, Game, FinalCapture, Trace, Register, SignIn, ChangePassword;
+    public static int RechargeUsd;
     public static bool Active, Accept, Decline;
     public static double QuitAfter = 60;
 }
@@ -538,7 +597,7 @@ class MainWindow : Form
     const int LogicalWidth = 960, LogicalHeight = 600;
     enum Phase { Checking, Failed, NoGame, NeedsInstall, Installing, Ready }
     enum SideTab { Account, Notes }
-    enum AccountView { Create, SignIn, Signed }
+    enum AccountView { Create, SignIn, Signed, Recharge, Paying, Paid, Password }
     const float SideX = 620, SideY = 52, SideWidth = 308, SideHeight = 402, FieldX = SideX + 20, FieldWidth = SideWidth - 40, FormTop = SideY + 86, RowHeight = 51;
 
     readonly string dataFolder = TestMode.DataFolder ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SteelOceanLinsoft");
@@ -573,7 +632,12 @@ class MainWindow : Form
     bool accountBusy, capturing, testAccountSent, restoringSession = true;
     string accountMessage = "";
     bool accountMessageGood;
-    TextBox emailBox, userBox, passwordBox, repeatBox;
+    TextBox emailBox, userBox, currentBox, passwordBox, repeatBox;
+    RechargeInfo recharge;
+    string rechargeOrder, rechargeUrl;
+    long rechargeGold;
+    volatile string rechargeWatching;
+    bool rechargeBusy, testRechargeSent, testPasswordSent;
 
     public MainWindow(float givenScale, bool updated)
     {
@@ -597,9 +661,10 @@ class MainWindow : Form
         installed = ReadData("version.txt");
         emailBox = MakeInput(false);
         userBox = MakeInput(false);
+        currentBox = MakeInput(true);
         passwordBox = MakeInput(true);
         repeatBox = MakeInput(true);
-        Controls.AddRange(new Control[] { emailBox, userBox, passwordBox, repeatBox });
+        Controls.AddRange(new Control[] { emailBox, userBox, currentBox, passwordBox, repeatBox });
         string savedUser = ReadData("account.txt");
         if (savedUser != null)
         {
@@ -1000,13 +1065,15 @@ class MainWindow : Form
     {
         if (accountView == AccountView.Create) return new[] { emailBox, userBox, passwordBox, repeatBox };
         if (accountView == AccountView.SignIn) return new[] { userBox, passwordBox };
+        if (accountView == AccountView.Password) return new[] { currentBox, passwordBox, repeatBox };
         return new TextBox[0];
     }
 
     string FieldLabel(TextBox box)
     {
         if (box == emailBox) return Tr.S("E-mail", "Correo");
-        if (box == passwordBox) return Tr.S("Password", "Contraseña");
+        if (box == currentBox) return Tr.S("Current password", "Contraseña actual");
+        if (box == passwordBox) return accountView == AccountView.Password ? Tr.S("New password", "Contraseña nueva") : Tr.S("Password", "Contraseña");
         if (box == repeatBox) return Tr.S("Repeat password", "Repite la contraseña");
         return accountView == AccountView.SignIn ? Tr.S("Username or e-mail", "Usuario o correo") : Tr.S("Username (you will use it in the game)", "Usuario (lo usarás en el juego)");
     }
@@ -1016,7 +1083,7 @@ class MainWindow : Form
     void PlaceInputs()
     {
         var shown = sideTab == SideTab.Account && dialog == null && !capturing ? FormFields() : new TextBox[0];
-        foreach (var box in new[] { emailBox, userBox, passwordBox, repeatBox })
+        foreach (var box in new[] { emailBox, userBox, currentBox, passwordBox, repeatBox })
             box.Visible = Array.IndexOf(shown, box) >= 0;
         for (int i = 0; i < shown.Length; i++)
         {
@@ -1028,10 +1095,21 @@ class MainWindow : Form
     void DrawAccount(Graphics g, RectangleF box)
     {
         if (accountView == AccountView.Signed) { DrawSignedIn(g, box); return; }
-        var track = new RectangleF(FieldX, SideY + 46, FieldWidth, 30);
-        Fill(g, track, 6, Color.FromArgb(170, 5, 12, 20));
-        DrawSegment(g, new RectangleF(track.X + 2, track.Y + 2, track.Width / 2 - 2, track.Height - 4), Tr.S("Create account", "Crear cuenta"), AccountView.Create);
-        DrawSegment(g, new RectangleF(track.X + track.Width / 2, track.Y + 2, track.Width / 2 - 2, track.Height - 4), Tr.S("Sign in", "Entrar"), AccountView.SignIn);
+        if (accountView == AccountView.Recharge) { DrawRecharge(g); return; }
+        if (accountView == AccountView.Paying) { DrawPaying(g); return; }
+        if (accountView == AccountView.Paid) { DrawPaid(g); return; }
+        if (accountView == AccountView.Password)
+        {
+            float back = DrawLink(g, FieldX, SideY + 48, Tr.S("← Back", "← Volver"), !accountBusy, ClosePassword);
+            Write(g, Tr.S("Change password", "Cambiar contraseña"), GetFont(Theme.BoldFont, 15), Theme.Text, back + 4, SideY + 46);
+        }
+        else
+        {
+            var track = new RectangleF(FieldX, SideY + 46, FieldWidth, 30);
+            Fill(g, track, 6, Color.FromArgb(170, 5, 12, 20));
+            DrawSegment(g, new RectangleF(track.X + 2, track.Y + 2, track.Width / 2 - 2, track.Height - 4), Tr.S("Create account", "Crear cuenta"), AccountView.Create);
+            DrawSegment(g, new RectangleF(track.X + track.Width / 2, track.Y + 2, track.Width / 2 - 2, track.Height - 4), Tr.S("Sign in", "Entrar"), AccountView.SignIn);
+        }
         var fields = FormFields();
         for (int i = 0; i < fields.Length; i++)
         {
@@ -1042,18 +1120,239 @@ class MainWindow : Form
                 Write(g, fields[i].UseSystemPasswordChar ? new string('•', fields[i].Text.Length) : fields[i].Text, GetFont(Theme.Font, 13), Theme.Text, r.X + 9, r.Y + 7);
         }
         var button = new RectangleF(FieldX, FormTop + fields.Length * RowHeight + 4, FieldWidth, 38);
-        bool enabled = !accountBusy && dialog == null;
+        DrawPanelButton(g, button, accountBusy ? Tr.S("Connecting…", "Conectando…") : accountView == AccountView.Password ? Tr.S("Change password", "Cambiar contraseña") : accountView == AccountView.Create ? Tr.S("Create account", "Crear cuenta") : Tr.S("Sign in", "Entrar"), !accountBusy && dialog == null, SubmitAccount);
+        if (accountMessage.Length > 0)
+            Paragraph(g, accountMessage, GetFont(Theme.Font, 12.5f), accountMessageGood ? Theme.Good : Theme.Bad, new RectangleF(FieldX, button.Bottom + 7, FieldWidth, SideY + SideHeight - button.Bottom - 12));
+    }
+
+    void DrawPanelButton(Graphics g, RectangleF button, string text, bool enabled, Action click)
+    {
         bool over = enabled && IsOver(button, false);
         using (var p = Rounded(button, 7))
         using (var b = new LinearGradientBrush(button, !enabled ? Color.FromArgb(44, 60, 74) : over ? Theme.SignalLight : Theme.Signal, !enabled ? Color.FromArgb(34, 47, 59) : Theme.SignalDark, 90f))
             g.FillPath(b, p);
-        string text = accountBusy ? Tr.S("Connecting…", "Conectando…") : accountView == AccountView.Create ? Tr.S("Create account", "Crear cuenta") : Tr.S("Sign in", "Entrar");
         var f = GetFont(Theme.BoldFont, 14);
         float a = g.MeasureString(text, f, PointF.Empty, typographic).Width;
         Write(g, text, f, enabled ? Color.FromArgb(18, 28, 38) : Theme.Muted, button.X + (button.Width - a) / 2, button.Y + 10);
-        if (enabled) AddZone(button, SubmitAccount, text, g);
+        if (enabled) AddZone(button, click, text, g);
+    }
+
+    void OpenPassword()
+    {
+        accountView = AccountView.Password;
+        accountMessage = "";
+        currentBox.Text = passwordBox.Text = repeatBox.Text = "";
+        PlaceInputs();
+        ActiveControl = currentBox;
+        Invalidate();
+    }
+
+    void ClosePassword()
+    {
+        accountView = AccountView.Signed;
+        accountMessage = "";
+        currentBox.Text = passwordBox.Text = repeatBox.Text = "";
+        ActiveControl = null;
+        PlaceInputs();
+        Invalidate();
+    }
+
+    void DrawRecharge(Graphics g)
+    {
+        float y = SideY + 46;
+        float next = DrawLink(g, FieldX, y + 2, Tr.S("← Back", "← Volver"), !rechargeBusy, delegate { accountView = AccountView.Signed; accountMessage = ""; Invalidate(); });
+        Write(g, Tr.S("Recharge gold", "Recargar oro"), GetFont(Theme.BoldFont, 15), Theme.Text, next + 4, y);
+        y += 28;
+        if (recharge == null)
+        {
+            Paragraph(g, accountMessage.Length > 0 ? accountMessage : Tr.S("Loading…", "Cargando…"), GetFont(Theme.Font, 13), accountMessage.Length > 0 ? Theme.Bad : Theme.Muted, new RectangleF(FieldX, y, FieldWidth, 80));
+            return;
+        }
+        if (!recharge.Available)
+        {
+            Paragraph(g, recharge.Reason, GetFont(Theme.Font, 13), Theme.Muted, new RectangleF(FieldX, y, FieldWidth, 80));
+            return;
+        }
+        if (recharge.Mode != "real")
+        {
+            Write(g, Tr.S("Test payments: no real money", "Pagos de prueba: sin dinero real"), GetFont(Theme.Font, 11.5f), Theme.Signal, FieldX, y);
+            y += 17;
+        }
+        float rowHeight = Math.Min(33, (SideY + SideHeight - 34 - y) / Math.Max(1, recharge.Options.Count));
+        foreach (var o in recharge.Options)
+        {
+            var r = new RectangleF(FieldX, y, FieldWidth, rowHeight - 3);
+            bool enabled = !rechargeBusy && dialog == null;
+            bool over = enabled && IsOver(r, false);
+            Fill(g, r, 5, over ? Color.FromArgb(32, 62, 84) : Color.FromArgb(14, 32, 47), Theme.Line);
+            var option = o;
+            float textY = r.Y + (r.Height - 17) / 2;
+            float x = FieldX + 10;
+            string gold = o.Gold.ToString("N0", CultureInfo.InvariantCulture);
+            Write(g, gold, GetFont(Theme.BoldFont, 13.5f), Theme.Text, x, textY);
+            x += g.MeasureString(gold, GetFont(Theme.BoldFont, 13.5f), PointF.Empty, typographic).Width + 5;
+            Write(g, Tr.S("gold", "oro"), GetFont(Theme.Font, 12), Theme.Muted, x, textY + 1);
+            if (o.Bonus > 0)
+            {
+                x += g.MeasureString(Tr.S("gold", "oro"), GetFont(Theme.Font, 12), PointF.Empty, typographic).Width + 6;
+                Write(g, "+" + o.Bonus.ToString("N0", CultureInfo.InvariantCulture), GetFont(Theme.Font, 12), Theme.Good, x, textY + 1);
+            }
+            string price = "$" + o.Usd;
+            var pf = GetFont(Theme.BoldFont, 13.5f);
+            Write(g, price, pf, Theme.Signal, r.Right - 10 - g.MeasureString(price, pf, PointF.Empty, typographic).Width, textY);
+            if (enabled) AddZone(r, delegate { ChooseRecharge(option); }, gold, g);
+            y += rowHeight;
+        }
         if (accountMessage.Length > 0)
-            Paragraph(g, accountMessage, GetFont(Theme.Font, 12.5f), accountMessageGood ? Theme.Good : Theme.Bad, new RectangleF(FieldX, button.Bottom + 7, FieldWidth, SideY + SideHeight - button.Bottom - 12));
+            Paragraph(g, accountMessage, GetFont(Theme.Font, 12), Theme.Bad, new RectangleF(FieldX, y + 2, FieldWidth, SideY + SideHeight - y - 6));
+    }
+
+    void DrawPaying(Graphics g)
+    {
+        float y = SideY + 54;
+        Write(g, Tr.S("Complete the payment in PayPal", "Completa el pago en PayPal"), GetFont(Theme.BoldFont, 15), Theme.Text, FieldX, y);
+        y += 30;
+        Paragraph(g, Tr.S("Your browser has opened PayPal. When you finish, your gold appears here on its own: you do not have to do anything else.", "Tu navegador ha abierto PayPal. Al terminar, el oro aparecerá aquí solo: no tienes que hacer nada más."),
+                  GetFont(Theme.Font, 13), Color.FromArgb(206, 218, 228), new RectangleF(FieldX, y, FieldWidth, 76));
+        y += 84;
+        double cycle = clock.Elapsed.TotalSeconds % 1.6 / 1.6;
+        var track = new RectangleF(FieldX, y, FieldWidth, 5);
+        Fill(g, track, 2.5f, Theme.Track);
+        float a = FieldWidth * 0.28f, start = (float)(cycle * (FieldWidth + a)) - a;
+        var state = g.Save();
+        g.SetClip(track);
+        using (var p = Rounded(new RectangleF(FieldX + start, y, a, 5), 2.5f))
+        using (var b = new SolidBrush(Theme.Sea))
+            g.FillPath(b, p);
+        g.Restore(state);
+        y += 20;
+        float next = DrawLink(g, FieldX, y, Tr.S("Open PayPal again", "Abrir PayPal otra vez"), rechargeUrl != null, delegate { OpenInBrowser(rechargeUrl); });
+        DrawLink(g, next, y, Tr.S("Cancel", "Cancelar"), true, delegate
+        {
+            rechargeWatching = null;
+            accountView = AccountView.Recharge;
+            accountMessage = "";
+            Invalidate();
+        });
+    }
+
+    void DrawPaid(Graphics g)
+    {
+        float y = SideY + 58;
+        Write(g, Tr.S("Gold recharged!", "¡Oro recargado!"), GetFont(Theme.BoldFont, 20), Theme.Good, FieldX, y);
+        y += 36;
+        Write(g, "+" + rechargeGold.ToString("N0", CultureInfo.InvariantCulture) + " " + Tr.S("gold", "oro"), GetFont(Theme.BoldFont, 26), Theme.Text, FieldX, y);
+        y += 44;
+        Paragraph(g, Tr.S("It is already in your account. Press Play when you are ready.", "Ya está en tu cuenta. Pulsa Jugar cuando quieras."),
+                  GetFont(Theme.Font, 13), Color.FromArgb(206, 218, 228), new RectangleF(FieldX, y, FieldWidth, 40));
+        y += 52;
+        DrawPanelButton(g, new RectangleF(FieldX, y, FieldWidth, 38), Tr.S("Done", "Hecho"), dialog == null, delegate { accountView = AccountView.Signed; Invalidate(); });
+    }
+
+    void OpenInBrowser(string url)
+    {
+        if (TestMode.Active) { File.AppendAllText(TestMode.Trace, "paypal abierto" + Environment.NewLine); return; }  // an automated test never opens a browser
+        try { Process.Start(url); }
+        catch (System.ComponentModel.Win32Exception) { }
+        catch (FileNotFoundException) { }
+    }
+
+    void OpenRecharge()
+    {
+        recharge = null;
+        accountMessage = "";
+        accountView = AccountView.Recharge;
+        Invalidate();
+        new Thread(delegate()
+        {
+            try
+            {
+                var info = Account.RechargeOptions();
+                OnUi(delegate
+                {
+                    recharge = info;
+                    if (info.Who != null && info.Who.User != null) account = info.Who;
+                    if (info.Credited > 0) { rechargeGold = info.Credited; accountView = AccountView.Paid; }
+                });
+            }
+            catch (Exception e)
+            {
+                if (!(e is WebException || e is ArgumentException || e is InvalidCastException || e is KeyNotFoundException || e is InvalidOperationException)) throw;
+                OnUi(delegate { accountMessage = Tr.S("Cannot reach Linsoft. Try again.", "Sin conexión con Linsoft. Vuelve a intentarlo."); });
+            }
+        }) { IsBackground = true }.Start();
+    }
+
+    void ChooseRecharge(RechargeOption option)
+    {
+        if (rechargeBusy) return;
+        rechargeBusy = true;
+        accountMessage = "";
+        new Thread(delegate()
+        {
+            AccountResult created;
+            try { created = Account.CreateRecharge(option.Usd); }
+            catch (WebException) { created = new AccountResult { Error = Tr.S("Cannot reach Linsoft. Try again.", "Sin conexión con Linsoft. Vuelve a intentarlo.") }; }
+            OnUi(delegate
+            {
+                rechargeBusy = false;
+                if (!created.Ok || created.Url == null)
+                {
+                    accountMessage = created.Error ?? Tr.S("Could not start the payment. Try again later.", "No se ha podido iniciar el pago. Prueba más tarde.");
+                    return;
+                }
+                rechargeOrder = created.Order;
+                rechargeUrl = created.Url;
+                accountView = AccountView.Paying;
+                OpenInBrowser(rechargeUrl);
+                string order = rechargeOrder;
+                rechargeWatching = order;
+                new Thread(delegate() { WatchPayment(order); }) { IsBackground = true }.Start();
+            });
+        }) { IsBackground = true }.Start();
+    }
+
+    // PayPal is in the browser, so the launcher asks the server until the payment is done. Closing the launcher loses nothing: the server collects it the next time this panel opens.
+    void WatchPayment(string order)
+    {
+        var limit = Stopwatch.StartNew();
+        while (limit.Elapsed.TotalMinutes < 30)
+        {
+            Thread.Sleep(TestMode.Active ? 300 : 4000);
+            bool cancel = rechargeWatching != order;
+            try
+            {
+                var r = Account.RechargeStatus(order, cancel);
+                if (r.Status == "paid")
+                {
+                    OnUi(delegate { FinishPayment(r); });
+                    return;
+                }
+                if (cancel) return;
+                if (r.Status == "cancelled" || r.Status == "declined" || r.Status == "error")
+                {
+                    OnUi(delegate
+                    {
+                        accountView = AccountView.Recharge;
+                        accountMessage = r.Status == "declined" ? Tr.S("PayPal declined the payment.", "PayPal ha rechazado el pago.") : r.Status == "error" ? Tr.S("The payment could not be credited. Contact the administrator.", "No se ha podido abonar el pago. Avisa al administrador.") : Tr.S("The payment was cancelled.", "El pago se ha cancelado.");
+                    });
+                    return;
+                }
+            }
+            catch (WebException) { }  // no network for a moment: it asks again
+        }
+        OnUi(delegate { accountView = AccountView.Recharge; accountMessage = Tr.S("No payment yet. If you pay later, your gold appears when you open this panel.", "Aún no hay pago. Si pagas más tarde, el oro aparecerá al abrir este panel."); });
+    }
+
+    void FinishPayment(AccountResult r)
+    {
+        rechargeGold = r.Paid;
+        if (r.User != null) account = r;
+        accountView = AccountView.Paid;
+        sideTab = SideTab.Account;
+        Activate();
+        if (TestMode.Active) File.AppendAllText(TestMode.Trace, "recargado " + r.Paid + " oro " + r.Gold + Environment.NewLine);
+        Invalidate();
     }
 
     void DrawSegment(Graphics g, RectangleF r, string text, AccountView view)
@@ -1089,9 +1388,13 @@ class MainWindow : Form
         }
         Paragraph(g, Tr.S("Press Play and you enter the game directly, without typing your password.", "Pulsa Jugar y entrarás directamente en el juego, sin escribir tu contraseña."),
                   GetFont(Theme.Font, 13), Color.FromArgb(206, 218, 228), new RectangleF(FieldX, y, FieldWidth, 54));
-        y += 66;
-        float next = DrawLink(g, FieldX, y, Tr.S("Recharge gold", "Recargar oro"), true, delegate { Process.Start(Patch.Website); });
+        y += 52;
+        DrawPanelButton(g, new RectangleF(FieldX, y, FieldWidth, 38), Tr.S("Recharge gold", "Recargar oro"), dialog == null, OpenRecharge);
+        y += 50;
+        float next = DrawLink(g, FieldX, y, Tr.S("Change password", "Cambiar contraseña"), !accountBusy, OpenPassword);
         DrawLink(g, next, y, Tr.S("Sign out", "Cerrar sesión"), !accountBusy, SignOut);
+        if (accountMessage.Length > 0)
+            Paragraph(g, accountMessage, GetFont(Theme.Font, 12.5f), accountMessageGood ? Theme.Good : Theme.Bad, new RectangleF(FieldX, y + 24, FieldWidth, 40));
     }
 
     void DrawWalletStat(Graphics g, float x, float y, float width, string label, long value)
@@ -1178,8 +1481,7 @@ class MainWindow : Form
         bool enabled = !busy && phase != Phase.Checking && phase != Phase.Installing;
         float next = DrawLink(g, x, 556, Tr.S("Game folder", "Carpeta del juego"), enabled, ChooseFolder);
         next = DrawLink(g, next, 556, Tr.S("Verify files", "Comprobar ficheros"), enabled, delegate { Start(Check); });
-        next = DrawLink(g, next, 556, Tr.S("Check for updates", "Buscar actualizaciones"), enabled, delegate { Start(CheckManually); });
-        DrawLink(g, next, 556, Tr.S("Linsoft website", "Web de Linsoft"), true, delegate { Process.Start(Patch.Website); });
+        DrawLink(g, next, 556, Tr.S("Check for updates", "Buscar actualizaciones"), enabled, delegate { Start(CheckManually); });
         DrawMainButton(g, new RectangleF(712, 488, 216, 62));
         var small = GetFont(Theme.Font, 12);
         string text = manifest != null && manifest.Date != null ? Tr.S("Released ", "Publicado el ") + manifest.Date : "";
@@ -1330,6 +1632,29 @@ class MainWindow : Form
                 if (state == "account-error") accountMessage = Tr.S("That username or e-mail is already registered.", "Ese usuario o correo ya está registrado.");
                 SetState(Phase.Ready, Tr.S("Ready to play", "Listo para jugar"), Tr.S("Your game is up to date.", "Tu juego está al día."), 1, "");
                 break;
+            case "password":
+                restoringSession = false;
+                sideTab = SideTab.Account;
+                account = new AccountResult { Ok = true, User = "Captain_01", HasWallet = true, Silver = 1250000, Gold = 3200, Ships = 12 };
+                accountView = AccountView.Password;
+                currentBox.Text = "password1";
+                passwordBox.Text = repeatBox.Text = "password2";
+                SetState(Phase.Ready, Tr.S("Ready to play", "Listo para jugar"), Tr.S("Your game is up to date.", "Tu juego está al día."), 1, "");
+                break;
+            case "recharge":
+            case "paying":
+            case "paid":
+                restoringSession = false;
+                sideTab = SideTab.Account;
+                account = new AccountResult { Ok = true, User = "Captain_01", HasWallet = true, Silver = 1250000, Gold = 3200, Ships = 12 };
+                accountView = state == "recharge" ? AccountView.Recharge : state == "paying" ? AccountView.Paying : AccountView.Paid;
+                rechargeGold = 1000;
+                rechargeUrl = "x";
+                recharge = new RechargeInfo { Available = true, Mode = "test" };
+                foreach (var pair in new[] { new[] { 5, 500, 500 }, new[] { 38, 3800, 3800 }, new[] { 68, 6800, 6800 }, new[] { 128, 12800, 12800 }, new[] { 248, 24800, 24800 }, new[] { 368, 36800, 36800 }, new[] { 428, 42800, 42800 }, new[] { 648, 64800, 64800 }, new[] { 768, 76800, 76800 } })
+                    recharge.Options.Add(new RechargeOption { Usd = pair[0], Gold = pair[1], Bonus = pair[2] });
+                SetState(Phase.Ready, Tr.S("Ready to play", "Listo para jugar"), Tr.S("Your game is up to date.", "Tu juego está al día."), 1, "");
+                break;
             case "account-signed":
                 sideTab = SideTab.Account;
                 accountView = AccountView.Signed;
@@ -1402,13 +1727,32 @@ class MainWindow : Form
             passwordBox.Text = parts[1];
             SubmitAccount();
         }
+        if (TestMode.ChangePassword != null && !testPasswordSent && account != null && accountView == AccountView.Signed && !accountBusy)
+        {
+            string[] parts = TestMode.ChangePassword.Split('|');
+            testPasswordSent = true;
+            OpenPassword();
+            currentBox.Text = parts[0];
+            passwordBox.Text = repeatBox.Text = parts[1];
+            SubmitAccount();
+        }
+        if (TestMode.RechargeUsd > 0 && !testRechargeSent && account != null && accountView == AccountView.Signed)
+        {
+            testRechargeSent = true;
+            OpenRecharge();
+        }
+        if (TestMode.RechargeUsd > 0 && testRechargeSent && recharge != null && accountView == AccountView.Recharge && !rechargeBusy && rechargeOrder == null)
+        {
+            var wanted = recharge.Options.Find(o => o.Usd == TestMode.RechargeUsd);
+            if (wanted != null) ChooseRecharge(wanted);
+        }
         string state = "account " + (account != null ? account.User : "-") + " | " + accountMessage;
         if (state != lastAccountTrace)
         {
             lastAccountTrace = state;
             File.AppendAllText(TestMode.Trace, state + Environment.NewLine);
         }
-        bool finished = !accountBusy && !(TestMode.Register != null && !testAccountSent) && !(TestMode.SignIn != null && !testAccountSent) && now > 1.5 && !busy && (phase == Phase.Ready || phase == Phase.Failed || phase == Phase.NoGame || phase == Phase.NeedsInstall) && now > 1;
+        bool finished = !restoringSession && !(TestMode.ChangePassword != null && !testPasswordSent) && !(TestMode.RechargeUsd > 0 && accountView != AccountView.Paid) && !accountBusy && !(TestMode.Register != null && !testAccountSent) && !(TestMode.SignIn != null && !testAccountSent) && now > 1.5 && !busy && (phase == Phase.Ready || phase == Phase.Failed || phase == Phase.NoGame || phase == Phase.NeedsInstall) && now > 1;
         if (finished || now > TestMode.QuitAfter)
         {
             if (TestMode.FinalCapture != null) SaveCapture(TestMode.FinalCapture);
@@ -1451,15 +1795,15 @@ class MainWindow : Form
         account = result;
         accountView = AccountView.Signed;
         accountMessage = "";
-        passwordBox.Text = repeatBox.Text = "";
+        currentBox.Text = passwordBox.Text = repeatBox.Text = "";
         PlaceInputs();
         Invalidate();
     }
 
     void SubmitAccount()
     {
-        if (accountBusy || accountView == AccountView.Signed) return;
-        if (accountView == AccountView.Create && passwordBox.Text != repeatBox.Text)
+        if (accountBusy || FormFields().Length == 0) return;
+        if (accountView != AccountView.SignIn && passwordBox.Text != repeatBox.Text)
         {
             accountMessage = Tr.S("The passwords do not match.", "Las contraseñas no coinciden.");
             accountMessageGood = false;
@@ -1468,14 +1812,14 @@ class MainWindow : Form
         accountBusy = true;
         accountMessage = "";
         ActiveControl = null;
-        bool creating = accountView == AccountView.Create;
-        string email = emailBox.Text, user = userBox.Text, password = passwordBox.Text;
+        bool creating = accountView == AccountView.Create, changing = accountView == AccountView.Password;
+        string email = emailBox.Text, user = userBox.Text, password = passwordBox.Text, current = currentBox.Text;
         new Thread(delegate()
         {
             AccountResult result;
             try
             {
-                result = creating ? Account.Register(email, user, password) : Account.SignIn(user, password);
+                result = changing ? Account.ChangePassword(current, password) : creating ? Account.Register(email, user, password) : Account.SignIn(user, password);
                 if (result.Ok) Account.SaveSession(dataFolder);
                 if (result.Ok && TestMode.Active) File.AppendAllText(TestMode.Trace, "token " + ((Account.GameToken() ?? "").Length == 24) + Environment.NewLine);
             }
@@ -1490,6 +1834,11 @@ class MainWindow : Form
                 {
                     WriteData("account.txt", result.User);
                     ShowSignedIn(result);
+                    if (changing)
+                    {
+                        accountMessage = Tr.S("Your password has been changed.", "Tu contraseña se ha cambiado.");
+                        accountMessageGood = true;
+                    }
                 }
                 else
                 {
@@ -1506,6 +1855,7 @@ class MainWindow : Form
         new Thread(delegate() { Account.SignOut(folder); }) { IsBackground = true }.Start();
         if (account != null) userBox.Text = account.User;
         account = null;
+        accountMessage = "";
         accountView = AccountView.SignIn;
         PlaceInputs();
         Invalidate();
@@ -1606,7 +1956,7 @@ class MainWindow : Form
             if (Patch.HasNewerLauncher(m))
             {
                 if (UpdateLauncher(m)) return;
-                failed = string.Format(Tr.S("Launcher {0} could not be installed. Download it from the website.", "No se pudo instalar el lanzador {0}. Descárgalo de la web."), m.Launcher.Version);
+                failed = string.Format(Tr.S("Launcher {0} could not be installed. Download it again from GitHub.", "No se pudo instalar el lanzador {0}. Vuelve a descargarlo de GitHub."), m.Launcher.Version);
             }
             if (game == null || m.Version != installed) { Check(); return; }
             string checkedAt = DateTime.Now.ToString("HH:mm");
@@ -1879,15 +2229,16 @@ static class Program
     // What does not open a window, for automated tests (never with the real game):
     //   --version; --test-apply --dir PATH --url URL: applies the patch; --test-self-update --url URL: replaces itself if there is a newer launcher;
     //   --test-window --url URL --dir PATH --data PATH --trace FILE [--accept|--decline] [--final FILE.png]: the real window, off-screen;
-    //   --capture FILE.png --state ready|signedout|updating|first|notinstalled|offline|account|account-error|account-signed --manifest FILE [--installed V] [--players N] [--scale X]: paints without showing anything on screen;
-    //   --language es|en: instead of the Windows language; --web URL: another server; --register "EMAIL|USER|PASSWORD" or --sign-in "USER|PASSWORD": in --test-window;
+    //   --capture FILE.png --state ready|signedout|updating|first|notinstalled|offline|account|account-error|account-signed|password|recharge|paying|paid --manifest FILE [--installed V] [--players N] [--scale X]: paints without showing anything on screen;
+    //   --language es|en: instead of the Windows language; --server URL: another server; --register "EMAIL|USER|PASSWORD", --sign-in "USER|PASSWORD", --change-password "CURRENT|NEW" and --recharge USD: in --test-window;
     //   --test-remember FILE --user NAME [--token T]: writes the username and the token in that game config file.
     [STAThread]
     static int Main(string[] a)
     {
         ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
         if (Value(a, "--url") != null) Patch.BaseUrl = Value(a, "--url");
-        if (Value(a, "--web") != null) Patch.Website = Value(a, "--web");
+        if (Value(a, "--server") != null) Patch.Server = Value(a, "--server");
+        else if (a.Length > 0 && a[0].StartsWith("--test-", StringComparison.Ordinal)) Patch.Server = "http://127.0.0.1:9/";  // a test never reaches the real server by accident
         if (Value(a, "--test-remember") != null) { Account.RememberInGame(Value(a, "--test-remember"), Value(a, "--user"), Value(a, "--token") ?? ""); return 0; }
         if (Has(a, "--version")) { Console.WriteLine(Patch.LauncherVersion); return 0; }
         if (Value(a, "--language") != null) Tr.Spanish = Value(a, "--language") == "es";
@@ -1935,6 +2286,8 @@ static class Program
             TestMode.Decline = Has(a, "--decline");
             TestMode.Register = Value(a, "--register");
             TestMode.SignIn = Value(a, "--sign-in");
+            TestMode.ChangePassword = Value(a, "--change-password");
+            TestMode.RechargeUsd = Value(a, "--recharge") != null ? int.Parse(Value(a, "--recharge")) : 0;
             Application.EnableVisualStyles();
             Application.Run(new MainWindow(1f, false));
             return 0;
