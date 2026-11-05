@@ -1,8 +1,8 @@
 # Steel Ocean launcher (Linsoft)
 
-**[Download the latest version](https://github.com/thefantas/launcher-steelocean/releases/latest)** · [Website](https://steelocean.linsoft.pe/)
+**[Download the launcher](https://github.com/thefantas/launcher-steelocean/releases/latest/download/SteelOceanLinsoft.exe)** · [All versions](https://github.com/thefantas/launcher-steelocean/releases)
 
-Launcher for the private Steel Ocean server at `steelocean.linsoft.pe`. This is an unofficial project. You need the game installed from Steam.
+Launcher for the private Steel Ocean server. This is an unofficial project. You need the game installed from Steam.
 
 It finds your installation, applies the signed patch, keeps itself and the patch up to date, shows the patch versions and their notes, and starts the game. It shows English, or Spanish on a Spanish Windows.
 
@@ -28,7 +28,7 @@ If the game crashes, it sends the Linsoft server a report with the game log and 
 | `keys/patch_public.xml` | The public key that verifies the patch |
 | `bin/` | The published launcher and the signed manifest |
 
-The patched game files (`*.gz`) are served from `steelocean.linsoft.pe`, and the private signing key is not in this repository.
+The patched game files (`*.gz`) are served by the game server, and the private signing key is not in this repository.
 
 ## Build
 
