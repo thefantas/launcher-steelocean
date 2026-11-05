@@ -1,5 +1,5 @@
 {
- "version": "1.0.3",
+ "version": "1.0.4",
  "date": "2026-11-05",
  "exe": "Binaries/win32/SeaGame.exe",
  "arguments": "-seekfreeloading -NOSCREENMESSAGES -Addr=steelocean.linsoft.pe:19000 -EnableReadEncrypted -EnableWriteEncrypted -MaxClientNumber=10 -TServerName=Linsoft",
@@ -238,6 +238,20 @@
  ],
  "history": [
   {
+   "version": "1.0.4",
+   "date": "2026-11-05",
+   "notes": [
+    "Shorter queues and fuller battles: they are completed with AI captains, marked [IA].",
+    "Ships change turning direction faster.",
+    "The launcher updates your gold while it is open."
+   ],
+   "notes_es": [
+    "Colas más cortas y partidas más llenas: se completan con capitanes IA, marcados con [IA].",
+    "Los barcos cambian de sentido de giro más rápido.",
+    "El lanzador actualiza tu oro mientras está abierto."
+   ]
+  },
+  {
    "version": "1.0.3",
    "date": "2026-11-05",
    "notes": [
@@ -297,8 +311,8 @@
   }
  ],
  "launcher": {
-  "version": "1.3.1",
-  "sha256": "e31280317c96903755a6d8813f79a5fa692b474a66d191a17655a5f2c409f19c",
-  "size": 123904
+  "version": "1.3.2",
+  "sha256": "e8ee0a6c6edbddc5feb80f0697f5e0a8812cf8d79936cdf252fce0197d3bd1ea",
+  "size": 124416
  }
 }

@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Steel Ocean - Linsoft")]
 [assembly: AssemblyProduct("Steel Ocean - Linsoft")]
-[assembly: AssemblyVersion("1.3.1.0")]
+[assembly: AssemblyVersion("1.3.2.0")]
 
 // The interface follows the Windows language: Spanish on a Spanish system, English on any other.
 static class Tr
@@ -48,7 +48,7 @@ class Manifest
 
 static class Patch
 {
-    public const string LauncherVersion = "1.3.1";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
+    public const string LauncherVersion = "1.3.2";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
     // build.py replaces this with keys/patch_public.xml.
     const string PublicKey = "__PUBLIC_KEY__";
     public const string GameFolder = "Steel Ocean Wolves of Deep Sea";
@@ -424,6 +424,8 @@ static class Account
         return Send("api/register", new Dictionary<string, string> { { "email", email }, { "username", user }, { "password", password } });
     }
 
+    public static AccountResult Me() { return Send("api/me", null); }
+
     public static AccountResult ChangePassword(string current, string password)
     {
         return Send("api/password", new Dictionary<string, string> { { "current", current }, { "password", password } });
@@ -578,6 +580,7 @@ static class TestMode
 {
     public static string DataFolder, Game, FinalCapture, Trace, Register, SignIn, ChangePassword;
     public static int RechargeUsd;
+    public static long WaitGold = -1;
     public static bool Active, Accept, Decline;
     public static double QuitAfter = 60;
 }
@@ -638,6 +641,7 @@ class MainWindow : Form
     long rechargeGold;
     volatile string rechargeWatching;
     bool rechargeBusy, testRechargeSent, testPasswordSent;
+    readonly AutoResetEvent walletCheck = new AutoResetEvent(false);
 
     public MainWindow(float givenScale, bool updated)
     {
@@ -678,6 +682,7 @@ class MainWindow : Form
             new Thread(Check) { IsBackground = true }.Start();
             new Thread(CheckServer) { IsBackground = true }.Start();
             new Thread(RestoreSession) { IsBackground = true }.Start();
+            new Thread(WatchWallet) { IsBackground = true }.Start();
             if (justUpdated) new Thread(Patch.CleanUpOldLauncher) { IsBackground = true }.Start();
         };
     }
@@ -1752,7 +1757,7 @@ class MainWindow : Form
             lastAccountTrace = state;
             File.AppendAllText(TestMode.Trace, state + Environment.NewLine);
         }
-        bool finished = !restoringSession && !(TestMode.ChangePassword != null && !testPasswordSent) && !(TestMode.RechargeUsd > 0 && accountView != AccountView.Paid) && !accountBusy && !(TestMode.Register != null && !testAccountSent) && !(TestMode.SignIn != null && !testAccountSent) && now > 1.5 && !busy && (phase == Phase.Ready || phase == Phase.Failed || phase == Phase.NoGame || phase == Phase.NeedsInstall) && now > 1;
+        bool finished = !(TestMode.WaitGold >= 0 && (account == null || account.Gold != TestMode.WaitGold)) && !restoringSession && !(TestMode.ChangePassword != null && !testPasswordSent) && !(TestMode.RechargeUsd > 0 && accountView != AccountView.Paid) && !accountBusy && !(TestMode.Register != null && !testAccountSent) && !(TestMode.SignIn != null && !testAccountSent) && now > 1.5 && !busy && (phase == Phase.Ready || phase == Phase.Failed || phase == Phase.NoGame || phase == Phase.NeedsInstall) && now > 1;
         if (finished || now > TestMode.QuitAfter)
         {
             if (TestMode.FinalCapture != null) SaveCapture(TestMode.FinalCapture);
@@ -1772,6 +1777,32 @@ class MainWindow : Form
             new Thread(CheckForUpdates) { IsBackground = true }.Start();
             new Thread(CheckServer) { IsBackground = true }.Start();
         }
+    }
+
+    // The gold changes while the launcher is open (in the game, or paying): read it again every so often, and when the window comes back to the front.
+    void WatchWallet()
+    {
+        while (!IsDisposed)
+        {
+            walletCheck.WaitOne(TestMode.Active ? 500 : 30000);
+            if (account == null) continue;
+            AccountResult me;
+            try { me = Account.Me(); }
+            catch (WebException) { continue; }
+            catch (IOException) { continue; }
+            OnUi(delegate
+            {
+                if (account == null || !me.Ok || me.User != account.User) return;
+                account = me;
+                Invalidate();
+            });
+        }
+    }
+
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        walletCheck.Set();
     }
 
     void RestoreSession()
@@ -2230,7 +2261,7 @@ static class Program
     //   --version; --test-apply --dir PATH --url URL: applies the patch; --test-self-update --url URL: replaces itself if there is a newer launcher;
     //   --test-window --url URL --dir PATH --data PATH --trace FILE [--accept|--decline] [--final FILE.png]: the real window, off-screen;
     //   --capture FILE.png --state ready|signedout|updating|first|notinstalled|offline|account|account-error|account-signed|password|recharge|paying|paid --manifest FILE [--installed V] [--players N] [--scale X]: paints without showing anything on screen;
-    //   --language es|en: instead of the Windows language; --server URL: another server; --register "EMAIL|USER|PASSWORD", --sign-in "USER|PASSWORD", --change-password "CURRENT|NEW" and --recharge USD: in --test-window;
+    //   --language es|en: instead of the Windows language; --server URL: another server; --register "EMAIL|USER|PASSWORD", --sign-in "USER|PASSWORD", --change-password "CURRENT|NEW", --recharge USD and --wait-gold N: in --test-window;
     //   --test-remember FILE --user NAME [--token T]: writes the username and the token in that game config file.
     [STAThread]
     static int Main(string[] a)
@@ -2287,6 +2318,7 @@ static class Program
             TestMode.Register = Value(a, "--register");
             TestMode.SignIn = Value(a, "--sign-in");
             TestMode.ChangePassword = Value(a, "--change-password");
+            if (Value(a, "--wait-gold") != null) TestMode.WaitGold = long.Parse(Value(a, "--wait-gold"));
             TestMode.RechargeUsd = Value(a, "--recharge") != null ? int.Parse(Value(a, "--recharge")) : 0;
             Application.EnableVisualStyles();
             Application.Run(new MainWindow(1f, false));
