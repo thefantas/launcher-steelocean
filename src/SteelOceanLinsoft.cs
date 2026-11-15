@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Steel Ocean - Linsoft")]
 [assembly: AssemblyProduct("Steel Ocean - Linsoft")]
-[assembly: AssemblyVersion("1.3.2.0")]
+[assembly: AssemblyVersion("1.4.0.0")]
 
 // The interface follows the Windows language: Spanish on a Spanish system, English on any other.
 static class Tr
@@ -34,7 +34,7 @@ static class Tr
 }
 
 class PatchFile { public string Path, Sha; public long Size, GzSize; }
-class HistoryEntry { public string Version, Date; public List<string> Notes = new List<string>(); }
+class HistoryEntry { public string Version, Date, Kind; public List<string> Notes = new List<string>(); public bool IsServer { get { return Kind == "server"; } } }
 class LauncherInfo { public string Version, Sha; public long Size; }
 
 class Manifest
@@ -48,7 +48,7 @@ class Manifest
 
 static class Patch
 {
-    public const string LauncherVersion = "1.3.2";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
+    public const string LauncherVersion = "1.4.0";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
     // build.py replaces this with keys/patch_public.xml.
     const string PublicKey = "__PUBLIC_KEY__";
     public const string GameFolder = "Steel Ocean Wolves of Deep Sea";
@@ -143,7 +143,7 @@ static class Patch
         if (d.ContainsKey("history"))
             foreach (Dictionary<string, object> h in (object[])d["history"])
             {
-                var e = new HistoryEntry { Version = (string)h["version"], Date = h.ContainsKey("date") ? (string)h["date"] : "" };
+                var e = new HistoryEntry { Version = (string)h["version"], Date = h.ContainsKey("date") ? (string)h["date"] : "", Kind = h.ContainsKey("kind") ? (string)h["kind"] : "" };
                 string notes = Tr.Spanish && h.ContainsKey("notes_es") ? "notes_es" : "notes";
                 if (h.ContainsKey(notes)) foreach (string n in (object[])h[notes]) e.Notes.Add(n);
                 m.History.Add(e);
@@ -1015,8 +1015,11 @@ class MainWindow : Form
         var history = manifest != null ? manifest.History : new List<HistoryEntry>();
         foreach (var e in history)
         {
-            string tag = e.Version == installed ? Tr.S("INSTALLED", "INSTALADO") : Patch.CompareVersions(e.Version, installed ?? "0") > 0 ? Tr.S("NEW", "NUEVO") : null;
-            noteLines.Add(new NoteLine { Text = Tr.S("Patch ", "Parche ") + e.Version, Font = GetFont(Theme.BoldFont, 15), Color = Theme.Text, Y = y, Height = 22, Tag = tag });
+            // Server updates (kind "server") change nothing on disk: no download, so no INSTALLED or NEW, just their own label.
+            string tag = e.IsServer ? Tr.S("SERVER", "SERVIDOR")
+                : e.Version == installed ? Tr.S("INSTALLED", "INSTALADO") : Patch.CompareVersions(e.Version, installed ?? "0") > 0 ? Tr.S("NEW", "NUEVO") : null;
+            string title = e.IsServer ? Tr.S("Server update", "Actualización del servidor") : Tr.S("Patch ", "Parche ") + e.Version;
+            noteLines.Add(new NoteLine { Text = title, Font = GetFont(Theme.BoldFont, 15), Color = Theme.Text, Y = y, Height = 22, Tag = tag });
             y += 21;
             if (!string.IsNullOrEmpty(e.Date))
             {
@@ -1434,7 +1437,7 @@ class MainWindow : Form
                 var f = GetFont(Theme.BoldFont, 10);
                 float a = SpacedWidth(g, l.Tag, f, 0.8f) + 14;
                 var r = new RectangleF(inner.Right - a, y + 2, a, 17);
-                Color c = l.Tag == Tr.S("INSTALLED", "INSTALADO") ? Theme.Good : Theme.Signal;
+                Color c = l.Tag == Tr.S("INSTALLED", "INSTALADO") ? Theme.Good : l.Tag == Tr.S("SERVER", "SERVIDOR") ? Theme.Sea : Theme.Signal;
                 Fill(g, r, 8.5f, Color.FromArgb(36, c), Color.FromArgb(120, c));
                 WriteSpaced(g, l.Tag, f, c, r.X + 7, r.Y + 2.6f, 0.8f);
             }

@@ -1,12 +1,12 @@
 {
- "version": "1.0.5",
- "date": "2026-11-05",
+ "version": "1.0.8",
+ "date": "2026-11-15",
  "exe": "Binaries/win32/SeaGame.exe",
  "arguments": "-seekfreeloading -NOSCREENMESSAGES -Addr=steelocean.linsoft.pe:19000 -EnableReadEncrypted -EnableWriteEncrypted -MaxClientNumber=10 -TServerName=Linsoft",
  "files": [
   {
    "path": "Binaries/win32/SeaGame.exe",
-   "sha256": "eb288a5c125771c3f3104cd4b09195059753347f16a72a3f19d222aadd299efc",
+   "sha256": "23961bc783dffe20eba81f9639e04c60cf40350862543668826501c745795c14",
    "size": 29795320,
    "gz_size": 10611609
   },
@@ -42,15 +42,15 @@
   },
   {
    "path": "SeaGame/Config/DefaultGame.ini",
-   "sha256": "a2118d935f1b965668607725c935c398e89f7007a3e4526d40cc165ce8605106",
-   "size": 29292,
+   "sha256": "319ef553aff22efddcf26c9a11e28e1cc9545ee32fe8ea2eab01657c699743ad",
+   "size": 29293,
    "gz_size": 7654
   },
   {
    "path": "SeaGame/CookedPC/SeaGame.u",
-   "sha256": "b80c4ce9c8a78f3d4731025e21df5017fff2bf271922bf78c91b34613879dc8e",
-   "size": 36748760,
-   "gz_size": 36152567
+   "sha256": "3991c25838106b9d514e2f078a3ee66febe57ea4a805af62c549226504b9ab68",
+   "size": 36835810,
+   "gz_size": 36171052
   },
   {
    "path": "SeaGame/CookedPC/UI/UICommander.upk",
@@ -238,6 +238,69 @@
  ],
  "history": [
   {
+   "version": "1.0.8",
+   "date": "2026-11-15",
+   "notes": [
+    "Commander skills now work as described, including reload skills like Otto Lindemann's.",
+    "Submarine, carrier and repair commander skills now take effect in battle.",
+    "Ship collisions are natural: both ships are pushed and damaged, with no snap-back.",
+    "Bots fight by class: carriers stay back, battleships support from behind, destroyers hunt submarines and submarines go for heavy ships.",
+    "The smoke launcher aim follows the crosshair again."
+   ],
+   "notes_es": [
+    "Las habilidades de los comandantes funcionan ya como dicen, también las de recarga como la de Otto Lindemann.",
+    "Las habilidades de comandante de submarinos, portaaviones y reparación ya se aplican en batalla.",
+    "Los choques entre barcos son naturales: empujan y dañan a los dos, sin rebote.",
+    "Los bots luchan según su clase: los portaaviones se quedan atrás, los acorazados apoyan desde detrás, los destructores cazan submarinos y los submarinos van a por los pesados.",
+    "El lanzador de humo vuelve a seguir la mira."
+   ],
+   "kind": "server"
+  },
+  {
+   "version": "1.0.8",
+   "date": "2026-11-15",
+   "notes": [
+    "Fixed: the game no longer closes when opening the Shop with many ships.",
+    "Reload skills (like Otto Lindemann's) also speed up the reload in progress.",
+    "Military Rank now changes with each battle (minimum ship tier per rank, daily decay and seasons).",
+    "Bots aim better, use smoke, extinguishers and repair kits; carriers and submarines join some battles."
+   ],
+   "notes_es": [
+    "Arreglado: el juego ya no se cierra al abrir la tienda con muchos barcos.",
+    "Las habilidades de recarga (como la de Otto Lindemann) aceleran también la recarga en curso.",
+    "El rango militar cambia ya con cada batalla (tier mínimo por rango, pérdida diaria y temporadas).",
+    "Los bots apuntan mejor y usan humo, extintor y kit de reparación; portaaviones y submarinos entran en algunas batallas."
+   ]
+  },
+  {
+   "version": "1.0.7",
+   "date": "2026-11-14",
+   "notes": [
+    "Chat messages up to 200 characters, without the word filter (names keep it).",
+    "The Social window opens by itself in port.",
+    "Matchmaking respects Night Battle, Flagship and Competition Mode options.",
+    "Private, team and fleet chat reach the right players; enemies no longer read ally chat.",
+    "VS Bots queue waits 30 s for other players."
+   ],
+   "notes_es": [
+    "Mensajes de chat de hasta 200 caracteres y sin filtro de palabras (los nombres lo conservan).",
+    "La ventana Social se abre sola en el puerto.",
+    "El emparejamiento respeta las opciones Night Battle, Flagship y Competition Mode.",
+    "El chat privado, de equipo y de flota llega a quien debe; los enemigos ya no leen el chat de aliados.",
+    "La cola contra bots espera 30 s a otros jugadores."
+   ]
+  },
+  {
+   "version": "1.0.6",
+   "date": "2026-11-08",
+   "notes": [
+    "Server stability fix: combat connection no longer drops after a player force-closes the game."
+   ],
+   "notes_es": [
+    "Arreglo de estabilidad: la conexión de combate ya no se cae cuando un jugador cierra el juego a la fuerza."
+   ]
+  },
+  {
    "version": "1.0.5",
    "date": "2026-11-05",
    "notes": [
@@ -323,8 +386,8 @@
   }
  ],
  "launcher": {
-  "version": "1.3.2",
-  "sha256": "e8ee0a6c6edbddc5feb80f0697f5e0a8812cf8d79936cdf252fce0197d3bd1ea",
-  "size": 124416
+  "version": "1.4.0",
+  "sha256": "f020f7ff1f85fa627411d8d6b689b49f1be0823da4b9626b8c1361503c5807b2",
+  "size": 124928
  }
 }
