@@ -1,14 +1,14 @@
 {
- "version": "1.0.8",
+ "version": "1.0.11",
  "date": "2026-11-15",
  "exe": "Binaries/win32/SeaGame.exe",
  "arguments": "-seekfreeloading -NOSCREENMESSAGES -Addr=steelocean.linsoft.pe:19000 -EnableReadEncrypted -EnableWriteEncrypted -MaxClientNumber=10 -TServerName=Linsoft",
  "files": [
   {
    "path": "Binaries/win32/SeaGame.exe",
-   "sha256": "23961bc783dffe20eba81f9639e04c60cf40350862543668826501c745795c14",
+   "sha256": "ea5bdcb5742445242645b049e4b70b264c56c45b41a3f1a520940fdae475d833",
    "size": 29795320,
-   "gz_size": 10611609
+   "gz_size": 10611617
   },
   {
    "path": "Binaries/win32/d3d9.dll",
@@ -137,6 +137,12 @@
    "gz_size": 2037
   },
   {
+   "path": "SeaGame/LogicConfig/ItemDesc.xml",
+   "sha256": "486a737cd20f0154cfc4fbb7fd03aaa7ce357ef8365293459bf462860ec12119",
+   "size": 11088,
+   "gz_size": 1222
+  },
+  {
    "path": "SeaGame/LogicConfig/MarketDesc.xml",
    "sha256": "015ef7927d7dbda04c895c6ece34e5e749db4b960f7c2a44874ea9eec95217bc",
    "size": 8075870,
@@ -237,6 +243,99 @@
   "SeaGame/Replay"
  ],
  "history": [
+  {
+   "version": "1.0.11",
+   "date": "2026-11-15",
+   "notes": [
+    "Launcher 1.4.1: new \"Scaling fix\" option at the bottom. If full screen does not fill your monitor with Windows display scaling above 100%, turn it on. It is on by default only on scaled displays."
+   ],
+   "notes_es": [
+    "Lanzador 1.4.1: nueva opción «Ajuste de escala» abajo. Si la pantalla completa no ocupa todo el monitor con la escala de Windows por encima del 100 %, actívala. Viene activada solo en pantallas escaladas."
+   ]
+  },
+  {
+   "version": "1.0.10",
+   "date": "2026-11-15",
+   "notes": [
+    "The engine gear arrow on the HUD moves again when you press R or F.",
+    "Torpedoes now explode when they touch the hull instead of passing through first.",
+    "Fixed a game crash when returning to port after a battle where planes had been shot down."
+   ],
+   "notes_es": [
+    "La flecha de la marcha del HUD vuelve a moverse al pulsar R o F.",
+    "Los torpedos estallan al tocar el casco en vez de atravesarlo antes.",
+    "Arreglado un cierre del juego al volver al puerto tras una batalla con aviones derribados."
+   ],
+   "kind": "server"
+  },
+  {
+   "version": "1.0.10",
+   "date": "2026-11-15",
+   "notes": [
+    "Widescreen monitors: resolutions up to 5120x1600 (e.g. 3440x1440 or 2560x1440) can now be selected in the video options."
+   ],
+   "notes_es": [
+    "Monitores anchos: ya se pueden elegir resoluciones de hasta 5120x1600 (por ejemplo, 3440x1440 o 2560x1440) en las opciones de vídeo."
+   ]
+  },
+  {
+   "version": "1.0.9",
+   "date": "2026-11-15",
+   "notes": [
+    "Turning while slowing down or reversing is smooth again: with the engine in reverse the ship turns like the original, without the sudden swing at low speed.",
+    "Ship anti-aircraft guns now only fire at planes the ship or its team can see, so scouts no longer get shot down before spotting anything."
+   ],
+   "notes_es": [
+    "El giro al frenar o ir marcha atrás vuelve a ser suave: con la máquina atrás el barco gira como en el original, sin el giro brusco a poca velocidad.",
+    "El antiaéreo de los barcos solo dispara a los aviones que el barco o su equipo ve: los aviones de reconocimiento ya no caen antes de descubrir nada."
+   ],
+   "kind": "server"
+  },
+  {
+   "version": "1.0.9",
+   "date": "2026-11-15",
+   "notes": [
+    "Steering no longer hangs when you switch from A to D (or W to S) without releasing the first key.",
+    "The smoke launcher aim no longer freezes after a few seconds while you steer."
+   ],
+   "notes_es": [
+    "El timón ya no se queda colgado al pasar de A a D (o de W a S) sin soltar la primera tecla.",
+    "La mira del lanzador de humo ya no se queda bloqueada a los pocos segundos al maniobrar."
+   ],
+   "kind": "server"
+  },
+  {
+   "version": "1.0.9",
+   "date": "2026-11-15",
+   "notes": [
+    "Submarine torpedo salvos now spread out in a fan, 5° between tubes and centred on your aim, instead of running side by side like a single torpedo."
+   ],
+   "notes_es": [
+    "Las salvas de torpedos de los submarinos ahora se abren en abanico, 5° entre tubos y centradas en la mira, en vez de ir en paralelo como si fueran un solo torpedo."
+   ],
+   "kind": "server"
+  },
+  {
+   "version": "1.0.9",
+   "date": "2026-11-15",
+   "notes": [
+    "Minimap pings, Focus fire and Request support now bring the nearest allied bot battleships and heavy cruisers to your target; carriers send their planes."
+   ],
+   "notes_es": [
+    "Las marcas en el minimapa, Concentrar fuego y Pedir apoyo atraen a tu objetivo a los acorazados y cruceros pesados bot aliados más cercanos; los portaaviones mandan sus aviones."
+   ],
+   "kind": "server"
+  },
+  {
+   "version": "1.0.9",
+   "date": "2026-11-15",
+   "notes": [
+    "Destroyers and other ships can now carry a normal smoke and a premium smoke at the same time."
+   ],
+   "notes_es": [
+    "Los destructores y demás barcos pueden llevar ya un humo normal y uno premium a la vez."
+   ]
+  },
   {
    "version": "1.0.8",
    "date": "2026-11-15",
@@ -386,8 +485,8 @@
   }
  ],
  "launcher": {
-  "version": "1.4.0",
-  "sha256": "f020f7ff1f85fa627411d8d6b689b49f1be0823da4b9626b8c1361503c5807b2",
-  "size": 124928
+  "version": "1.4.1",
+  "sha256": "a2a60f5931a895da13b5f5f64b6fe2267f132cc764d03d0ddabd89773fecd2db",
+  "size": 126464
  }
 }

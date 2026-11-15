@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Steel Ocean - Linsoft")]
 [assembly: AssemblyProduct("Steel Ocean - Linsoft")]
-[assembly: AssemblyVersion("1.4.0.0")]
+[assembly: AssemblyVersion("1.4.1.0")]
 
 // The interface follows the Windows language: Spanish on a Spanish system, English on any other.
 static class Tr
@@ -48,7 +48,7 @@ class Manifest
 
 static class Patch
 {
-    public const string LauncherVersion = "1.4.0";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
+    public const string LauncherVersion = "1.4.1";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
     // build.py replaces this with keys/patch_public.xml.
     const string PublicKey = "__PUBLIC_KEY__";
     public const string GameFolder = "Steel Ocean Wolves of Deep Sea";
@@ -618,6 +618,7 @@ class MainWindow : Form
     double progress = -2;  // 0 to 1; -1 no bar; -2 unknown
     Manifest manifest;
     string game, installed;
+    bool scalingFix;  // the game ignores Windows display scaling: see DpiFix
     List<PatchFile> pendingFiles;  // what "Not now" left without installing
     long pendingMb;
     int? players;
@@ -663,6 +664,8 @@ class MainWindow : Form
             ShowInTaskbar = false;
         }
         installed = ReadData("version.txt");
+        string fix = ReadData("scalingfix.txt");
+        scalingFix = fix != null ? fix == "on" : DpiFix.ScaledDisplay();
         emailBox = MakeInput(false);
         userBox = MakeInput(false);
         currentBox = MakeInput(true);
@@ -1489,7 +1492,8 @@ class MainWindow : Form
         bool enabled = !busy && phase != Phase.Checking && phase != Phase.Installing;
         float next = DrawLink(g, x, 556, Tr.S("Game folder", "Carpeta del juego"), enabled, ChooseFolder);
         next = DrawLink(g, next, 556, Tr.S("Verify files", "Comprobar ficheros"), enabled, delegate { Start(Check); });
-        DrawLink(g, next, 556, Tr.S("Check for updates", "Buscar actualizaciones"), enabled, delegate { Start(CheckManually); });
+        next = DrawLink(g, next, 556, Tr.S("Check for updates", "Buscar actualizaciones"), enabled, delegate { Start(CheckManually); });
+        DrawLink(g, next, 556, scalingFix ? Tr.S("Scaling fix: on", "Ajuste de escala: sí") : Tr.S("Scaling fix: off", "Ajuste de escala: no"), enabled, ToggleScalingFix);
         DrawMainButton(g, new RectangleF(712, 488, 216, 62));
         var small = GetFont(Theme.Font, 12);
         string text = manifest != null && manifest.Date != null ? Tr.S("Released ", "Publicado el ") + manifest.Date : "";
@@ -2237,14 +2241,60 @@ class MainWindow : Form
         }) { IsBackground = true }.Start();
     }
 
+    void ToggleScalingFix()
+    {
+        scalingFix = !scalingFix;
+        try { WriteData("scalingfix.txt", scalingFix ? "on" : "off"); }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        Invalidate();
+    }
+
     void StartGame(AccountResult who, string token)
     {
         try { if (who != null) Account.RememberInGame(Account.GameConfigFile(), who.User, token ?? ""); }
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
         string exe = Path.Combine(game, manifest.Exe.Replace('/', '\\'));
+        DpiFix.Apply(exe, scalingFix);
         Process.Start(new ProcessStartInfo(exe, manifest.Arguments + " -server=steelocean.linsoft.pe/dumplog/zj") { WorkingDirectory = Path.GetDirectoryName(exe), UseShellExecute = false });
         Close();
+    }
+}
+
+// With Windows display scaling above 100 % the game thinks the screen is smaller (3440x1440 at 125 % looks like 2752x1152)
+// and, with DXVK, full screen stays in a corner. The fix is what the Compatibility tab does with "Override high DPI scaling
+// behavior: Application": the HIGHDPIAWARE layer for SeaGame.exe in the user's AppCompatFlags. It is a launcher option, on
+// by default only when the display is scaled, so nothing changes for anyone else.
+static class DpiFix
+{
+    const string Layers = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
+    const string Flag = "HIGHDPIAWARE";
+
+    public static bool ScaledDisplay()
+    {
+        try { using (var g = Graphics.FromHwnd(IntPtr.Zero)) return g.DpiX > 96.5f; }
+        catch (Exception) { return false; }
+    }
+
+    public static void Apply(string exe, bool on)
+    {
+        try
+        {
+            using (var k = Registry.CurrentUser.CreateSubKey(Layers))
+            {
+                if (k == null) return;
+                string old = k.GetValue(exe) as string ?? "";
+                var flags = new List<string>(old.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+                flags.RemoveAll(f => f == "~" || f == Flag || (on && (f == "DPIUNAWARE" || f == "GDIDPISCALING")));
+                if (on) flags.Add(Flag);
+                string value = flags.Count > 0 ? "~ " + string.Join(" ", flags.ToArray()) : null;
+                if (value == old || (value == null && old.Length == 0)) return;
+                if (value == null) k.DeleteValue(exe, false);
+                else k.SetValue(exe, value);
+            }
+        }
+        catch (Exception) { }  // never stops the game from starting
     }
 }
 
