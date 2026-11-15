@@ -1,5 +1,5 @@
 {
- "version": "1.0.11",
+ "version": "1.0.12",
  "date": "2026-11-15",
  "exe": "Binaries/win32/SeaGame.exe",
  "arguments": "-seekfreeloading -NOSCREENMESSAGES -Addr=steelocean.linsoft.pe:19000 -EnableReadEncrypted -EnableWriteEncrypted -MaxClientNumber=10 -TServerName=Linsoft",
@@ -244,6 +244,35 @@
  ],
  "history": [
   {
+   "version": "1.0.12",
+   "date": "2026-11-15",
+   "notes": [
+    "The yellow throttle marker stays in auto mode again, and pressing F lowers the cruise speed by one step instead of turning auto mode off.",
+    "Matchmaking: when a battle is filled with bots, every player waiting in that tier range joins it (for example 2 vs 1 plus bots).",
+    "Training rooms now show the full battle statistics at the end (still with no rewards).",
+    "Fixed players being disconnected from port after every battle on some connections.",
+    "Ramming an allied ship now does very little damage, as in the original."
+   ],
+   "notes_es": [
+    "El marcador amarillo de la marcha vuelve a quedarse en automático, y F baja una marcha de crucero en vez de quitar el modo automático.",
+    "Emparejamiento: cuando una partida se completa con bots, entran todos los que esperan en ese tramo de tiers (por ejemplo, 2 contra 1 y bots).",
+    "Las salas de entrenamiento ya muestran las estadísticas completas al acabar (siguen sin premios).",
+    "Arreglado que algunos jugadores perdieran la conexión con el puerto al acabar cada partida.",
+    "Chocar con un barco aliado ahora hace muy poco daño, como en el original."
+   ],
+   "kind": "server"
+  },
+  {
+   "version": "1.0.12",
+   "date": "2026-11-15",
+   "notes": [
+    "Launcher 1.4.2: the \"Scaling fix\" option is now off by default; turn it on only if full screen does not fill your monitor."
+   ],
+   "notes_es": [
+    "Lanzador 1.4.2: la opción «Ajuste de escala» viene ahora desactivada; actívala solo si la pantalla completa no ocupa todo el monitor."
+   ]
+  },
+  {
    "version": "1.0.11",
    "date": "2026-11-15",
    "notes": [
@@ -485,8 +514,8 @@
   }
  ],
  "launcher": {
-  "version": "1.4.1",
-  "sha256": "a2a60f5931a895da13b5f5f64b6fe2267f132cc764d03d0ddabd89773fecd2db",
-  "size": 126464
+  "version": "1.4.2",
+  "sha256": "9caa63f107e653596e1467670f65af955aed5830841a9f973229c6f26595490d",
+  "size": 126976
  }
 }

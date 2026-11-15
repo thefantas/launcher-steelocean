@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Steel Ocean - Linsoft")]
 [assembly: AssemblyProduct("Steel Ocean - Linsoft")]
-[assembly: AssemblyVersion("1.4.1.0")]
+[assembly: AssemblyVersion("1.4.2.0")]
 
 // The interface follows the Windows language: Spanish on a Spanish system, English on any other.
 static class Tr
@@ -48,7 +48,7 @@ class Manifest
 
 static class Patch
 {
-    public const string LauncherVersion = "1.4.1";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
+    public const string LauncherVersion = "1.4.2";  // Raise it whenever this file changes: build.py requires it, and it is what makes players update.
     // build.py replaces this with keys/patch_public.xml.
     const string PublicKey = "__PUBLIC_KEY__";
     public const string GameFolder = "Steel Ocean Wolves of Deep Sea";
@@ -665,7 +665,7 @@ class MainWindow : Form
         }
         installed = ReadData("version.txt");
         string fix = ReadData("scalingfix.txt");
-        scalingFix = fix != null ? fix == "on" : DpiFix.ScaledDisplay();
+        scalingFix = fix != null ? fix == "on" : DpiFix.AlreadyOn();
         emailBox = MakeInput(false);
         userBox = MakeInput(false);
         currentBox = MakeInput(true);
@@ -2264,17 +2264,32 @@ class MainWindow : Form
 
 // With Windows display scaling above 100 % the game thinks the screen is smaller (3440x1440 at 125 % looks like 2752x1152)
 // and, with DXVK, full screen stays in a corner. The fix is what the Compatibility tab does with "Override high DPI scaling
-// behavior: Application": the HIGHDPIAWARE layer for SeaGame.exe in the user's AppCompatFlags. It is a launcher option, on
-// by default only when the display is scaled, so nothing changes for anyone else.
+// behavior: Application": the HIGHDPIAWARE layer for SeaGame.exe in the user's AppCompatFlags. It is a launcher option, off
+// by default (1.4.1 turned it on by itself on scaled displays): it stays on only for whoever already has the layer.
 static class DpiFix
 {
     const string Layers = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
     const string Flag = "HIGHDPIAWARE";
 
-    public static bool ScaledDisplay()
+    // The default when the player has never chosen: on only if a SeaGame.exe already has the layer (set by 1.4.1 or by hand),
+    // so that the fix does not disappear for whoever needed it.
+    public static bool AlreadyOn()
     {
-        try { using (var g = Graphics.FromHwnd(IntPtr.Zero)) return g.DpiX > 96.5f; }
-        catch (Exception) { return false; }
+        try
+        {
+            using (var k = Registry.CurrentUser.OpenSubKey(Layers))
+            {
+                if (k == null) return false;
+                foreach (string name in k.GetValueNames())
+                {
+                    string v = k.GetValue(name) as string ?? "";
+                    if (name.EndsWith(@"\SeaGame.exe", StringComparison.OrdinalIgnoreCase) && Array.IndexOf(v.Split(' '), Flag) >= 0)
+                        return true;
+                }
+            }
+        }
+        catch (Exception) { }
+        return false;
     }
 
     public static void Apply(string exe, bool on)
